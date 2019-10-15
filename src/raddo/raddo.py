@@ -221,7 +221,7 @@ def main():
     parser.add_argument('-x', '--extract',
                         required=False,
                         default=False,
-                        action='store_true', dest='sort',
+                        action='store_true', dest='extract',
                         help=(f'Should the data be extracted?'))
 
     args = parser.parse_args()
@@ -243,9 +243,9 @@ def main():
                  start_date=args.start,
                  end_date=args.end)
     if args.sort:
-        sort_tars(path=args.directory)
+        sort_tars.sort_tars(path=args.directory)
     if args.extract:
-        untar(path=args.directory)
+        untar.untar(path=args.directory)
 
 
 if __name__ == "__main__":

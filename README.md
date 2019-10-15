@@ -14,6 +14,9 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 
 ## Usage ##
 
+Download RADOLAN data from 2019-01-01 till today to current directory with `raddo`. For further arguments consult the help text:
+
+
 ``` sh
 usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
              [-x]
@@ -42,6 +45,83 @@ optional arguments:
   -x, --extract         Should the data be extracted?
 
 ```
+### Example
+
+Downloading, sorting and extracting RADOLAN data for date range 2019-05-05 - 2019-05-11:
+
+```
+$ raddo -fx -s '2019-05-05' -e '2019-05-11'
+Do you really want to store RADOLAN data in "/tmp/raddo_test"?
+[y/N] y
+
+--------------------------------------------------------------
+[LOCAL]  Radolan directory is set to:
+/tmp/raddo_test
+
+[REMOTE] Radolan directory is set to:
+https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/
+
+searching for data from 2019-05-05 - 2019-05-11.
+
+--------------------------------------------------------------
+2019-10-15 18:41:03.33    getting names of local files in directory:
+                          .../tmp/raddo_test
+2019-10-15 18:41:03.33    0 local archive(s) found.
+
+2019-10-15 18:41:03.33    6 file(s) missing.
+
+Missing files:
+
+RW-20190505.tar.gz
+RW-20190506.tar.gz
+RW-20190507.tar.gz
+RW-20190508.tar.gz
+RW-20190509.tar.gz
+RW-20190510.tar.gz
+2019-10-15 18:41:03.33    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190505.tar.gz
+2019-10-15 18:41:03.47    [SUCCESS] RW-20190505.tar.gz downloaded.
+
+2019-10-15 18:41:03.47    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190506.tar.gz
+2019-10-15 18:41:03.60    [SUCCESS] RW-20190506.tar.gz downloaded.
+
+2019-10-15 18:41:03.60    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190507.tar.gz
+2019-10-15 18:41:03.72    [SUCCESS] RW-20190507.tar.gz downloaded.
+
+2019-10-15 18:41:03.72    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190508.tar.gz
+2019-10-15 18:41:03.87    [SUCCESS] RW-20190508.tar.gz downloaded.
+
+2019-10-15 18:41:03.87    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190509.tar.gz
+2019-10-15 18:41:04.01    [SUCCESS] RW-20190509.tar.gz downloaded.
+
+2019-10-15 18:41:04.01    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190510.tar.gz
+2019-10-15 18:41:04.14    [SUCCESS] RW-20190510.tar.gz downloaded.
+
+
+2019-10-15 18:41:04.14   getting filenames in /tmp/raddo_test..
+mkdir: created directory './2019'
+mkdir: created directory './2019/RW-201905'
+renamed 'RW-20190510.tar.gz' -> './2019/RW-201905/RW-20190510.tar.gz'
+renamed 'RW-20190509.tar.gz' -> './2019/RW-201905/RW-20190509.tar.gz'
+renamed 'RW-20190508.tar.gz' -> './2019/RW-201905/RW-20190508.tar.gz'
+renamed 'RW-20190507.tar.gz' -> './2019/RW-201905/RW-20190507.tar.gz'
+renamed 'RW-20190506.tar.gz' -> './2019/RW-201905/RW-20190506.tar.gz'
+renamed 'RW-20190505.tar.gz' -> './2019/RW-201905/RW-20190505.tar.gz'
+
+2019-10-15 18:41:04.18 Sorting finished.
+
+2019-10-15 18:41:04.18   getting filenames...
+untarring  2019/RW-201905/RW-20190505.tar.gz to 2019/RW-201905/RW-20190505
+untarring  2019/RW-201905/RW-20190506.tar.gz to 2019/RW-201905/RW-20190506
+untarring  2019/RW-201905/RW-20190507.tar.gz to 2019/RW-201905/RW-20190507
+untarring  2019/RW-201905/RW-20190508.tar.gz to 2019/RW-201905/RW-20190508
+untarring  2019/RW-201905/RW-20190509.tar.gz to 2019/RW-201905/RW-20190509
+untarring  2019/RW-201905/RW-20190510.tar.gz to 2019/RW-201905/RW-20190510
+
+2019-10-15 18:41:04.84   Untarred 6 archives in: 0.665s
+                         0 archive(s) skipped
+
+```
+
 
 ### Crontab ###
 
