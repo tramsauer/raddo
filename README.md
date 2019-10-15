@@ -8,13 +8,11 @@ The freely accessible data may be re-used without any restrictions provided that
 *raddo* tries to download all recent RADOLAN ascii files / archives from DWD FTP to the specified directory if files do not exist already. A list of dates possibly available (default 2019-01-01 until today) is used to compare hypothetical available data sets with actual local available ones. So file listing on the FTP side is skipped due to (formerly) unreliable connection.
 The RADOLAN precipitation data files are *updated daily* by DWD.
 
-The data can be found at:
-https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/
+<img align="right" src="dwd_logo.png" width="200">
 
-![DWD-Logo](dwd_logo.png)
+The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/ "https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/").
 
 ## Usage ##
-
 
 ``` sh
 usage: raddo.py [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END]
