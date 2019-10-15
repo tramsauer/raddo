@@ -15,8 +15,8 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 ## Usage ##
 
 ``` sh
-usage: raddo.py [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END]
-                     [-E ERRORS]
+usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
+             [-x]
 
 Utility to download RADOLAN data from DWD servers.
 
@@ -24,20 +24,22 @@ optional arguments:
   -h, --help            show this help message and exit
   -u URL, --radolan_server_url URL
                         Path to recent .asc RADOLAN data on DWD servers.
-                        Default:
-						'https://opendata.dwd.de/climate_environment/C
-                         DC/grids_germany/hourly/radolan/recent/asc/'
+                        Default: https://opendata.dwd.de/climate_environment/C
+                        DC/grids_germany/hourly/radolan/recent/asc/
   -d DIRECTORY, --directory DIRECTORY
-                        Path to local directory where RADOLAN should be (and
-						may already be) saved. Default: current working
-						directory.
+                        Path to local directory where RADOLAN shouldbe (and
+                        may already be) saved. Default:
+                        /home/tramsauer/Code/raddo
   -s START, --start START
                         Start date as parsable string (e.g. "2018-05-20").
                         Default: 2019-01-01
   -e END, --end END     End date as parsable string (e.g. "2018-05-20").
-                        Default: today
-  -E ERRORS, --Errors-allowed ERRORS
+                        Default: 2019-10-15 18:32:10.296252
+  -r ERRORS, --Errors-allowed ERRORS
                         Errors allowed when contacting DWD Server. Default: 5
+  -f, --sort-in-folders
+                        Should the data be sorted in folders?
+  -x, --extract         Should the data be extracted?
 
 ```
 

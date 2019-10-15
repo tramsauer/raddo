@@ -175,7 +175,7 @@ def main():
 
     parser = MyParser(
         description=('Utility to download RADOLAN data from DWD servers.'),
-        prog="radolan_down.py",
+        prog="raddo",
         # usage='%(prog)s directory [-h] [-p]'
         )
 
