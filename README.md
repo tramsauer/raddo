@@ -11,7 +11,7 @@ The RADOLAN precipitation data files are *updated daily* by DWD.
 The data can be found at:
 https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/
 
-![DWD-Logo](DWD-Logo.tif)
+![DWD-Logo](dwd_logo.png)
 
 ## Usage ##
 
