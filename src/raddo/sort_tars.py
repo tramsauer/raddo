@@ -21,15 +21,19 @@ __license__ = "gpl3"
 def sort_tars(path):
     os.chdir(path)
     print("\n"+str(datetime.now())[:-4] + f'   getting filenames in {path}..')
-    fileSet = glob.glob('*.tar.gz')
+    fileSet = glob.glob('*.tar*')
 
     if len(fileSet) == 0:
         print('No files found.')
     else:
         for file in fileSet:
             year = file[3:7]
-            month = file[7:9]
-            future_file_path = './{}/RW-{}{}'.format(year, year, month)
+            if not os.path.splitext(file)[-1] == ".tar":
+                month = file[7:9]
+                future_file_path = './{}/RW-{}{}'.format(year, year, month)
+            else:
+                month = ""
+                future_file_path = './{}/'.format(year)
             # print(future_file_path)
             try:
                 os.system('mkdir -vp {}'.format(future_file_path))

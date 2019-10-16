@@ -17,7 +17,6 @@ from __future__ import print_function
 import os
 import re
 import tarfile
-import time
 from datetime import datetime
 
 
@@ -25,56 +24,44 @@ def untar(path):
 
     os.chdir(path)
 
-    print("\n"+str(datetime.now())[:-4] + '   getting filenames...')
-    count_tarred = 0
+    print('\n'+str(datetime.now())[:-4] + \
+          '   getting name of files to untar...')
     count_to_tar = 0
-    count_not_tarred = 0
-    fileSet = []
-    for dir_, _, files in os.walk(path):
-        for fileName in files:
 
-            if (re.match(r".+\.tar$", fileName) is not None
-                    or re.match(r".+\.tar\.gz$", fileName) is not None):
-                os.chdir(dir_)
-                relDir = os.path.relpath(dir_, path)
-                relFile = os.path.join(relDir, fileName)
-                os.chdir(dir_)
-                if os.path.exists(fileName.split(".")[0]) is not True:
-                    fileSet.append(relFile)
-                    count_to_tar += 1
-                else:
-                    # print(fileName, " skipped. Filename already exists.",
-                    #       end="\n")
-                    count_not_tarred += 1
-                os.chdir(path)
+    def save_untar(filename):
+        f_base = filename.split(".")[0]
+        if not os.path.exists(f_base):
+            tar = tarfile.open(filename, 'r')
+            print(str(datetime.now())[:-4] + "   ", end="")
+            print("untarring ", filename, end=" ")
+            print("to {}".format(f_base))
+            tar.extractall(path=f_base)
+            return 0
+        return 1
 
-    # List filenames and ask for deletion
-    start = time.time()
-    if len(fileSet) != 0:
-        # print("\n")
-        for f in fileSet:
-            tar = tarfile.open(f, 'r')
-            print("untarring ", f, end=" ")
-            if f[0] == ".":
-                i = 1
-                tar.extractall(path=f.split(".")[i][1:])
-                print("to {}".format(f.split(".")[i][1:]))
-            else:
-                i = 0
-                tar.extractall(path=f.split(".")[i])
-                print("to {}".format(f.split(".")[i]))
+    for root, dirs, files in os.walk(path):
+        for filename in files:
+            os.chdir(root)
+            f_base = filename.split(".")[0]
+            if re.match(r".+\.tar\.gz$", filename) is not None:
+                count_to_tar += 1
+                save_untar(filename)
+            if re.match(r".+\.tar$", filename) is not None:
+                count_to_tar += 1
+                ret = save_untar(filename)
+                if ret == 0:
+                    for gz_root, gz_dirs, gz_files in os.walk(f_base):
+                        for gz_filename in gz_files:
+                            os.chdir(os.path.join(root, gz_root))
+                            f_base = os.path.splitext(gz_filename)[0]
+                            if re.match(r".+\.tar.gz$", gz_filename) is not None:
+                                count_to_tar += 1
+                                save_untar(gz_filename)
 
-            tar.close()
-            count_tarred += 1
-    else:
+    if count_to_tar == 0:
         print(str(datetime.now())[:-4] + "   no matching files found.")
-
-    end = time.time()
-    print("\n" + str(datetime.now())[:-4],
-          '  Untarred {} archives in: {:.3f}s'
-          .format(count_tarred, end-start),
-          "\n                         {} archive(s) skipped"
-          .format(count_not_tarred))
+    else:
+        print(str(datetime.now())[:-4] + "   done.")
 
 
 def main():
