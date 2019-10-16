@@ -33,7 +33,7 @@ rad_dir_dwd_hist = ("https://opendata.dwd.de/climate_environment/CDC/"
                     "grids_germany/hourly/radolan/historical/asc/")
 rad_dir = os.getcwd()
 start_date = "2019-01-01"
-end_date = datetime.datetime.today()
+end_date = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
 errors_allowed = 5
 valid_y = ["y", "Y"]
 valid_n = ["n", "N", ""]
@@ -68,10 +68,10 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
             parsable date string (default "2019-01")
 
         end_date: string
-            parsable date string (defaults to current date)
+            parsable date string (defaults to yesterday)
 
         errors_allowed: integer
-            number of tries to download one file (default: 50)
+            number of tries to download one file (default: 5)
 
     """
     # Set dates
@@ -119,9 +119,15 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
     print(str(datetime.datetime.now())[:-4],
           f"   {len(dates_exist)} local archive(s) found.\n")
 
+    # avoid searching for todays data:
+    delta = 1
+    if end_datetime.date() == datetime.datetime.today().date():
+        delta -= 1
+
     # create list of possibly available DATA
     date_list = [start_datetime + datetime.timedelta(days=x)
-                 for x in range(int((end_datetime - start_datetime).days)+1)]
+                 for x in range(
+                         int((end_datetime - start_datetime).days) + delta)]
     list_DWD = ["RW-{}.tar.gz"
                 .format(datetime.datetime.strftime(x, format="%Y%m%d"))
                 for x in date_list]
