@@ -277,16 +277,22 @@ def main():
                         default=False,
                         action='store_true', dest='extract',
                         help=(f'Should the data be extracted?'))
+    parser.add_argument('-y', '--yes',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='yes',
+                        help=(f'Skip user input. Answere yes.'))
 
     args = parser.parse_args()
     if args.directory == os.getcwd():
-        print(f"Do you really want to store RADOLAN data in "
-              f"\"{os.getcwd()}\"?")
-        do = input("[y/N] ")
-        if do in valid_y:
-            pass
-        elif do in valid_n:
-            raise Exception("User interruption.")
+        if args.yes:
+            print(f"Do you really want to store RADOLAN data in "
+                f"\"{os.getcwd()}\"?")
+            do = input("[y/N] ")
+            if do in valid_y:
+                pass
+            elif do in valid_n:
+                raise Exception("User interruption.")
 
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
