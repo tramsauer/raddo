@@ -1,4 +1,4 @@
-# raddo - RADOLAN weather radar download
+# raddo
 
 *raddo* downloads RADOLAN weather radar ascii data (*tar.gz). Downloaded files are sorted in folders based on year and month and may also be untarred.
 
@@ -12,9 +12,19 @@ The RADOLAN precipitation data files are *updated daily* by DWD.
 
 The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/ "https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/").
 
-## Usage ##
 
-Download RADOLAN data from 2019-01-01 till today to current directory with `raddo`. For further arguments consult the help text:
+## Installation
+
+Clone this repository and run:
+
+``` python
+python setup.py install
+```
+
+
+## Usage
+
+Download RADOLAN data from *2019-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
 
 
 ``` sh
@@ -122,6 +132,10 @@ untarring  2019/RW-201905/RW-20190510.tar.gz to 2019/RW-201905/RW-20190510
 
 ```
 
+#### The terminal prompt may look something like this
+
+![example image should load here...](prompt.png "Terminal prompt")
+
 
 ### Crontab ###
 
@@ -153,9 +167,14 @@ sort_tars.sh && untar_default.sh
 may be added to fully extract and sort the downloaded archives.
 
 
-### Python script ####
+### Python script
 
- With `python raddo.py` the comparison and download can be started in the shell with the default values.
+``` python
+import raddo as rd
+
+rd.radolan_down(rad_dir_dwd = ...,  )
+```
+
  Variables and their defaults are:
 
  ```
@@ -181,12 +200,27 @@ may be added to fully extract and sort the downloaded archives.
 
  ```
 
-#### General Usage:
-``` python
-import raddo as rd
 
-rd.radolan_down(rad_dir_dwd = ...,  )
-```
-#### The terminal prompt may look something like this:
+## Contributing
 
-![example image should load here...](prompt.png "Terminal prompt")
+See [CONTRIBUTIONS](CONTRIBUTIONS.md) document.
+
+## License
+[![license badge](https://img.shields.io/badge/license-GNU_GPLv3-lightgrey)](LICENSE.txt)
+
+Please find the license aggreement in [LICENSE.txt](LICENSE.txt)
+
+## Changes
+
+See [Changelog](CHANGELOG.rst) document.
+
+## Further Development
+
+- [ ] add historical
+- [ ] integrate GeoTiff generation (reprojection)
+- [ ] integrate aggregation to NetCDF files
+- [ ] add DOI
+- [ ] pip install?
+- [ ] add pypi install
+- [ ] add conda install
+- [ ] gif for cli
