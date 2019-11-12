@@ -34,10 +34,21 @@ rad_dir_dwd_hist = ("https://opendata.dwd.de/climate_environment/CDC/"
 rad_dir = os.getcwd()
 start_date = "2019-01-01"
 end_date = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
+end_date_str = datetime.datetime.strftime(end_date, "%Y-%m-%d")
 errors_allowed = 5
 valid_y = ["y", "Y"]
 valid_n = ["n", "N", ""]
 
+
+class pcol:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def radolan_down(rad_dir_dwd=rad_dir_dwd,
                  rad_dir=rad_dir,
@@ -84,36 +95,41 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
     start_datetime = parse(start_date)
 
-    os.chdir(rad_dir)
+    print(pcol.BOLD+pcol.OKBLUE)
     print("\n--------------------------------------------------------------")
     print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
     print(f"[REMOTE] Radolan directory is set to:\n{rad_dir_dwd}\n")
     print(f"searching for data from {start_datetime.date()} - "
           f"{end_datetime.date()}.")
     print("\n--------------------------------------------------------------")
+    print(pcol.ENDC)
 
-    cwd = os.getcwd()
+    search = True
+    if rad_dir == os.getcwd():
+        search = False
 
     fileSet = []
     fileSet_hist = []
     dates_exist = []
     dates_exist_hist = []
+    files_success = []
 
     print(str(datetime.datetime.now())[:-4],
           "   getting names of local files in directory:")
 
-    # Get filenames
-    for dir_, _, files in os.walk(cwd):
-        print(f"                          ...{dir_[-30:]}          \r", end="")
-        for fileName in files:
-            pattern = r"RW-\d{8}\.tar\.gz$"
-            pattern_hist = r"RW-\d{6}\.tar$"
-            if re.match(pattern, fileName) is not None:
-                fileSet.append(fileName)
-                dates_exist.append(int(fileName[3:11]))
-            if re.match(pattern_hist, fileName) is not None:
-                fileSet_hist.append(fileName)
-                dates_exist_hist.append(int(fileName[3:9]))
+    # Get filenames if directory is specified
+    if search:
+        for dir_, _, files in os.walk(rad_dir):
+            print(f"                          ...{dir_[-30:]}          \r", end="")
+            for fileName in files:
+                pattern = r"RW-\d{8}\.tar\.gz$"
+                pattern_hist = r"RW-\d{6}\.tar$"
+                if re.match(pattern, fileName) is not None:
+                    fileSet.append(fileName)
+                    dates_exist.append(int(fileName[3:11]))
+                if re.match(pattern_hist, fileName) is not None:
+                    fileSet_hist.append(fileName)
+                    dates_exist_hist.append(int(fileName[3:9]))
 
     print()
     print(str(datetime.datetime.now())[:-4],
@@ -165,7 +181,7 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
             try:
                 print(str(datetime.datetime.now())[:-4],
-                      "   [{}] trying {}{}"
+                      "    [{}] trying {}{}"
                       .format(error_count, rad_dir_dwd, f))
                 # response = urlopen("{}{}".format(rad_dir_dwd, f),
                 #                            timeout=60)
@@ -179,6 +195,7 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                     continue
                 print(str(datetime.datetime.now())[:-4],
                       "   [SUCCESS] {} downloaded.\n".format(f))
+                files_success.append(f)
                 break
             except HTTPError as err:
                 if err.code == 404:
@@ -188,35 +205,50 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                     hist_m = f[7:9]
                     try:
                         print(str(datetime.datetime.now())[:-4],
+                              pcol.WARNING,
                               "   [ERROR] {}. "
                               "Now trying historical data."
-                              .format(f, rad_dir_dwd_hist+hist_y+"/"+hist_f))
+                              .format(f, rad_dir_dwd_hist+hist_y+"/"+hist_f),
+                              pcol.ENDC)
                         if hist_f not in os.listdir():
-                            urlretrieve(rad_dir_dwd_hist+hist_y+"/"+hist_f, hist_f)
+                            urlretrieve(rad_dir_dwd_hist+hist_y+"/"+hist_f,
+                                        hist_f)
                             size = os.path.getsize(hist_f)
                             if size == 0:
-                                print('file size of {}==0! Removing.'
-                                     .format(hist_f))
+                                print(
+                                    pcol.WARNING,
+                                    f'file size of {hist_f}==0! Removing.',
+                                    pcol.WARNING)
                                 os.remove(hist_f)
                                 continue
                             print(str(datetime.datetime.now())[:-4],
-                                  "   [SUCCESS] {} downloaded.\n".format(hist_f))
+                                  pcol.OKGREEN,
+                                  f"   [SUCCESS] {hist_f} downloaded.\n",
+                                  pcol.ENDC)
+                            files_success.append(hist_f)
                         else:
                             print(str(datetime.datetime.now())[:-4],
-                                  "   [SUCCESS] {} was already downloaded.\n"
-                                  .format(hist_f))
+                                  pcol.OKGREEN,
+                                  f"   [SUCCESS] {hist_f} has already "
+                                  f"been downloaded.\n",
+                                  pcol.ENDC)
                         break
 
                     except Exception as e:
                         print(str(datetime.datetime.now())[:-4],
-                            "   [ERROR] {}\n".format(e))
+                              pcol.WARNING,
+                              f"   [ERROR] {e}\n",
+                              pcol.ENDC)
                         error_count += 1
-                        continue
 
-            if error_count is errors_allowed:
+            if error_count is errors_allowed+1:
                 print("\n", str(datetime.datetime.now())[:-4],
-                      "   [ERROR!!] Tried {} times to download {}!"
-                      .format(error_count, f))
+                      pcol.FAIL,
+                      "   [ERROR] Exceeded requests ({}) for {}!"
+                      .format(error_count, f),
+                      pcol.ENDC)
+
+    return files_success
 
 
 def main():
@@ -245,7 +277,8 @@ def main():
                         default=f"{os.getcwd()}",
                         action='store', dest='directory',
                         help=(f'Path to local directory where RADOLAN should'
-                              f'be (and may already be) saved.'
+                              f'be (and may already be) saved. Checks for '
+                              f'existing files only if this flag is set.'
                               f'\nDefault: {os.getcwd()}'))
     parser.add_argument('-s', '--start',
                         required=False,
@@ -260,8 +293,8 @@ def main():
                         action='store', dest='end',
                         help=(f'End date as parsable string '
                               f'(e.g. "2018-05-20").'
-                              f'\nDefault: {end_date}'))
-    parser.add_argument('-r', '--Errors-allowed',
+                              f'\nDefault: {end_date_str} (yesterday)'))
+    parser.add_argument('-r', '--errors-allowed',
                         required=False,
                         default=errors_allowed,
                         action='store', dest='errors',
@@ -281,7 +314,8 @@ def main():
                         required=False,
                         default=False,
                         action='store_true', dest='yes',
-                        help=(f'Skip user input. Answere yes.'))
+                        help=(f'Skip user input. Just accept to download to '
+                              'current directory if not specified otherwise.'))
 
     args = parser.parse_args()
     if args.directory == os.getcwd():
@@ -297,13 +331,14 @@ def main():
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
 
-    radolan_down(rad_dir_dwd=args.url,
-                 rad_dir=args.directory,
-                 errors_allowed=int(args.errors),
-                 start_date=args.start,
-                 end_date=args.end)
+    successfull_down = radolan_down(rad_dir_dwd=args.url,
+                                    rad_dir=args.directory,
+                                    errors_allowed=int(args.errors),
+                                    start_date=args.start,
+                                    end_date=args.end)
     if args.sort:
         sort_tars.sort_tars(path=args.directory)
+    # TODO only untar successfull_down files
     if args.extract:
         untar.untar(path=args.directory)
 

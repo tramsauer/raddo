@@ -20,6 +20,7 @@ import tarfile
 from datetime import datetime
 
 
+# TODO add *args to accept list of file names
 def untar(path):
 
     os.chdir(path)
