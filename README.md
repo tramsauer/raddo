@@ -142,7 +142,7 @@ untarring  2019/RW-201905/RW-20190510.tar.gz to 2019/RW-201905/RW-20190510
 An entry in crontab could be used to download the data. E.g.:
 
 ``` bash
-0 12 * * 1-5 /home/user/path/to/raddo/rad_down.sh
+0 12 * * 1-5 raddo -fx -d /path/to/radolan/data/
 ```
 
 To have the following skript running every weekday at 12:00 noon.
