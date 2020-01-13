@@ -32,7 +32,7 @@ rad_dir_dwd = ("https://opendata.dwd.de/climate_environment/CDC/"
 rad_dir_dwd_hist = ("https://opendata.dwd.de/climate_environment/CDC/"
                     "grids_germany/hourly/radolan/historical/asc/")
 rad_dir = os.getcwd()
-start_date = "2019-01-01"
+start_date = f"{datetime.datetime.today().year}-01-01"
 end_date = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
 end_date_str = datetime.datetime.strftime(end_date, "%Y-%m-%d")
 errors_allowed = 5
@@ -104,9 +104,11 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
     print("\n--------------------------------------------------------------")
     print(pcol.ENDC)
 
+    # TODO sensible??
     search = True
     if rad_dir == os.getcwd():
         search = False
+    os.chdir(rad_dir)
 
     fileSet = []
     fileSet_hist = []
@@ -279,14 +281,15 @@ def main():
                         help=(f'Path to local directory where RADOLAN should'
                               f'be (and may already be) saved. Checks for '
                               f'existing files only if this flag is set.'
-                              f'\nDefault: {os.getcwd()}'))
+                              f'\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
                         default=start_date,
                         action='store', dest='start',
                         help=(f'Start date as parsable string '
                               f'(e.g. "2018-05-20").'
-                              f'\nDefault: {start_date}'))
+                              f'\nDefault: {start_date} '
+                              f'(current year\'s Jan 1st)'))
     parser.add_argument('-e', '--end',
                         required=False,
                         default=end_date,
@@ -318,6 +321,7 @@ def main():
                               'current directory if not specified otherwise.'))
 
     args = parser.parse_args()
+
     if args.directory == os.getcwd():
         if args.yes:
             print(f"Do you really want to store RADOLAN data in "
