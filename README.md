@@ -1,5 +1,7 @@
 # raddo
 
+*raddo* is a no-frills software that prepares RADOLAN weather radar precipitation data for simple usage.
+
 *raddo* downloads RADOLAN weather radar ascii data (*tar.gz). Downloaded files are sorted in folders based on year and month and may also be untarred.
 
 RADOLAN data from the German Weather Service (Deutscher Wetterdienst, DWD) is copyrighted! Please find the copyright text [here](https://opendata.dwd.de/climate_environment/CDC/Terms_of_use.pdf).
@@ -216,7 +218,7 @@ See [Changelog](CHANGELOG.rst) document.
 
 ## Further Development
 
-- [ ] add historical
+- [X] add historical
 - [ ] integrate GeoTiff generation (reprojection)
 - [ ] integrate aggregation to NetCDF files
 - [ ] add DOI
@@ -224,3 +226,11 @@ See [Changelog](CHANGELOG.rst) document.
 - [ ] add pypi install
 - [ ] add conda install
 - [ ] gif for cli
+
+## See also
+
+- [wradlib](https://github.com/wradlib/wradlib):
+  > An Open Source Library for Weather Radar Data Processing
+
+- [radproc](https://github.com/jkreklow/radproc):
+  > A GIS-compatible Python-Package for automated RADOLAN Composite Processing and Analysis
