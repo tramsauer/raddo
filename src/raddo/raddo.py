@@ -408,11 +408,13 @@ def main():
                                     errors_allowed=int(args.errors),
                                     start_date=args.start,
                                     end_date=args.end)
-    if args.sort:
-        sort_tars.sort_tars(path=args.directory)
-    # TODO only untar successfull_down files
-    if args.extract:
-        untar.untar(path=args.directory)
+    if len(successfull_down) > 0:
+        if args.sort:
+            # sort_tars.sort_tars(path=args.directory)
+            new_paths = sort_tars.sort_tars(files=successfull_down)
+        # TODO only untar successfull_down files
+        if args.extract:
+            untar.untar(files=new_paths)
 
 
 if __name__ == "__main__":
