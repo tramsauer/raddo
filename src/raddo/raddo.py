@@ -32,6 +32,8 @@ rad_dir_dwd = ("https://opendata.dwd.de/climate_environment/CDC/"
 rad_dir_dwd_hist = ("https://opendata.dwd.de/climate_environment/CDC/"
                     "grids_germany/hourly/radolan/historical/asc/")
 rad_dir = os.getcwd()
+# TODO ($USERCONFIG/.raddo/local_files) ??
+FILELIST = ".raddo_local_files.txt"
 start_date = f"{datetime.datetime.today().year}-01-01"
 end_date = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
 end_date_str = datetime.datetime.strftime(end_date, "%Y-%m-%d")
@@ -49,6 +51,7 @@ class pcol:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 
 def radolan_down(rad_dir_dwd=rad_dir_dwd,
                  rad_dir=rad_dir,
@@ -95,34 +98,42 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
     start_datetime = parse(start_date)
 
+
     print(pcol.BOLD+pcol.OKBLUE)
-    print("\n--------------------------------------------------------------")
+    print("-" * 80)
     print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
     print(f"[REMOTE] Radolan directory is set to:\n{rad_dir_dwd}\n")
     print(f"searching for data from {start_datetime.date()} - "
-          f"{end_datetime.date()}.")
-    print("\n--------------------------------------------------------------")
+          f"{end_datetime.date()}.\n")
+    print("-" * 80)
     print(pcol.ENDC)
-
-    # TODO sensible??
-    search = True
-    if rad_dir == os.getcwd():
-        search = False
-    os.chdir(rad_dir)
 
     fileSet = []
     fileSet_hist = []
     dates_exist = []
     dates_exist_hist = []
     files_success = []
+    os.chdir(rad_dir)
 
-    print(str(datetime.datetime.now())[:-4],
-          "   getting names of local files in directory:")
+    # TODO sensible??
+    search = False
+    if not local_file_list_exists():
+        search = True
+        if rad_dir == os.getcwd():
+            search = False
+    else:
+        dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
+                       for f in list_of_available_files()]
+
 
     # Get filenames if directory is specified
     if search:
+        print(str(datetime.datetime.now())[:-4],
+              "   getting names of local files in directory:")
+
         for dir_, _, files in os.walk(rad_dir):
-            print(f"                          ...{dir_[-30:]}          \r", end="")
+            print(f"                          ...{dir_[-30:]}          \r",
+                  end="")
             for fileName in files:
                 pattern = r"RW-\d{8}\.tar\.gz$"
                 pattern_hist = r"RW-\d{6}\.tar$"
@@ -132,10 +143,15 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                 if re.match(pattern_hist, fileName) is not None:
                     fileSet_hist.append(fileName)
                     dates_exist_hist.append(int(fileName[3:9]))
+        create_file_list_savely(fileSet)
+        if len(fileSet_hist) > 0:
+            update_list_of_available_files(fileSet_hist)
+
 
     print()
     print(str(datetime.datetime.now())[:-4],
           f"   {len(dates_exist)} local archive(s) found.\n")
+
 
     # avoid searching for todays data:
     delta = 1
@@ -155,11 +171,24 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
     def hist_filename(filename):
         return filename[:9]+".tar"
+
     # Compare local and remote list
     missing_files = []
-    for f in list_DWD:
-        if f not in fileSet:
-            if hist_filename(f) not in fileSet_hist:
+    if search:
+        for f in list_DWD:
+            if f not in fileSet:
+                if hist_filename(f) not in fileSet_hist:
+                    missing_files.append(f)
+    else:
+        fileSet = list_of_available_files()
+
+        print(str(datetime.datetime.now())[:-4],"   ", end="")
+        print(pcol.OKGREEN, end="")
+        print(f"Read file list of available files ({FILELIST}).", end="")
+        print(pcol.ENDC)
+
+        for f in list_DWD:
+            if not ((f in fileSet) or (hist_filename(f) in fileSet)):
                 missing_files.append(f)
 
     if len(missing_files) > 0:
@@ -250,7 +279,46 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                       .format(error_count, f),
                       pcol.ENDC)
 
+    update_list_of_available_files(files_success)
+
     return files_success
+
+
+def local_file_list_exists():
+    return os.path.exists(FILELIST)
+
+
+def create_file_list_savely(available_files):
+    if not local_file_list_exists():
+        with open(FILELIST, 'a') as fl:
+            for f in sorted(available_files):
+                fl.write(f+"\n")
+        print(str(datetime.datetime.now())[:-4],"   ", end="")
+        print(pcol.OKGREEN, end="")
+        print(f"Created file list of available files ({FILELIST}).", end="")
+        print(pcol.ENDC)
+
+
+def update_list_of_available_files(new_files):
+    if len(new_files) > 0:
+        if local_file_list_exists():
+            with open(FILELIST, "a") as fl:
+                for nf in sorted(new_files):
+                    fl.write(nf+"\n")
+
+            print(str(datetime.datetime.now())[:-4],"   ", end="")
+            print(pcol.OKGREEN, end="")
+            print(f"Updated file list of available files ({FILELIST}) with:",
+                end="")
+            print(pcol.ENDC)
+            print(new_files)
+
+
+def list_of_available_files():
+    if local_file_list_exists():
+        with open(FILELIST, 'r') as fl:
+            filelist = fl.read().splitlines()
+        return filelist
 
 
 def main():
