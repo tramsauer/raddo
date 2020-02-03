@@ -98,7 +98,6 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
     start_datetime = parse(start_date)
 
-
     print(pcol.BOLD+pcol.OKBLUE)
     print("-" * 80)
     print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
@@ -125,7 +124,6 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
         dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
                        for f in list_of_available_files()]
 
-
     # Get filenames if directory is specified
     if search:
         print(str(datetime.datetime.now())[:-4],
@@ -147,11 +145,9 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
         if len(fileSet_hist) > 0:
             update_list_of_available_files(fileSet_hist)
 
-
     print()
     print(str(datetime.datetime.now())[:-4],
           f"   {len(dates_exist)} local archive(s) found.\n")
-
 
     # avoid searching for todays data:
     delta = 1
@@ -165,9 +161,9 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
     list_DWD = ["RW-{}.tar.gz"
                 .format(datetime.datetime.strftime(x, format="%Y%m%d"))
                 for x in date_list]
-    list_DWD_hist = list(set([
-        "RW-{}.tar".format(datetime.datetime.strftime(x, format="%Y%m"))
-        for x in date_list]))
+    # list_DWD_hist = list(set([
+    #     "RW-{}.tar".format(datetime.datetime.strftime(x, format="%Y%m"))
+    #     for x in date_list]))
 
     def hist_filename(filename):
         return filename[:9]+".tar"
@@ -182,7 +178,7 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
     else:
         fileSet = list_of_available_files()
 
-        print(str(datetime.datetime.now())[:-4],"   ", end="")
+        print(str(datetime.datetime.now())[:-4], "   ", end="")
         print(pcol.OKGREEN, end="")
         print(f"Read file list of available files ({FILELIST}).", end="")
         print(pcol.ENDC)
@@ -233,7 +229,7 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                     # try historical data
                     hist_f = f[:9]+".tar"
                     hist_y = f[3:7]
-                    hist_m = f[7:9]
+                    # hist_m = f[7:9]
                     try:
                         print(str(datetime.datetime.now())[:-4],
                               pcol.WARNING,
@@ -293,7 +289,7 @@ def create_file_list_savely(available_files):
         with open(FILELIST, 'a') as fl:
             for f in sorted(available_files):
                 fl.write(f+"\n")
-        print(str(datetime.datetime.now())[:-4],"   ", end="")
+        print(str(datetime.datetime.now())[:-4], "   ", end="")
         print(pcol.OKGREEN, end="")
         print(f"Created file list of available files ({FILELIST}).", end="")
         print(pcol.ENDC)
@@ -306,10 +302,10 @@ def update_list_of_available_files(new_files):
                 for nf in sorted(new_files):
                     fl.write(nf+"\n")
 
-            print(str(datetime.datetime.now())[:-4],"   ", end="")
+            print(str(datetime.datetime.now())[:-4], "   ", end="")
             print(pcol.OKGREEN, end="")
             print(f"Updated file list of available files ({FILELIST}) with:",
-                end="")
+                  end="")
             print(pcol.ENDC)
             print(new_files)
 
@@ -393,7 +389,7 @@ def main():
     if args.directory == os.getcwd():
         if args.yes:
             print(f"Do you really want to store RADOLAN data in "
-                f"\"{os.getcwd()}\"?")
+                  f"\"{os.getcwd()}\"?")
             do = input("[y/N] ")
             if do in valid_y:
                 pass
