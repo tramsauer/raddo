@@ -11,6 +11,7 @@
 import os
 import sys
 import re
+import glob
 import datetime
 import argparse
 
@@ -178,10 +179,11 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
     else:
         fileSet = list_of_available_files()
 
-        print(str(datetime.datetime.now())[:-4], "   ", end="")
-        print(pcol.OKGREEN, end="")
-        print(f"Read file list of available files ({FILELIST}).", end="")
-        print(pcol.ENDC)
+        if not len(fileSet) == 0:
+            print(str(datetime.datetime.now())[:-4], "   ", end="")
+            print(pcol.OKGREEN, end="")
+            print(f"Read file list of available files ({FILELIST}).", end="")
+            print(pcol.ENDC)
 
         for f in list_DWD:
             if not ((f in fileSet) or (hist_filename(f) in fileSet)):
@@ -308,6 +310,8 @@ def update_list_of_available_files(new_files):
                   end="")
             print(pcol.ENDC)
             print(new_files)
+        else:
+            create_file_list_savely(new_files)
 
 
 def list_of_available_files():
@@ -315,6 +319,36 @@ def list_of_available_files():
         with open(FILELIST, 'r') as fl:
             filelist = fl.read().splitlines()
         return filelist
+    return []
+
+
+def try_create_directory(directory):
+    try:
+        os.makedirs(directory)
+    except FileExistsError:
+        pass
+    except OSError:
+        raise
+    return directory
+
+
+def get_asc_files(directories):
+    dirs = list(set(list(directories)))
+    fl = []
+    for d in dirs:
+        [fl.append(f) for f in glob.glob(os.path.join(d, "*asc"),
+                                         recursive=True)]
+    return fl
+
+
+def create_geotiffs(filelist, outdir):
+    for f in filelist:
+
+        outf = os.path.join(outdir,
+                            os.path.splitext(os.path.basename(f))[0] + ".tiff")
+        reproject = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "reproject_radolan_geotiff.sh")
+        os.system(f"{reproject} {f} {outf}")
 
 
 def main():
@@ -383,6 +417,12 @@ def main():
                         action='store_true', dest='yes',
                         help=(f'Skip user input. Just accept to download to '
                               'current directory if not specified otherwise.'))
+    parser.add_argument('-g', '--geotiff',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='geotiff',
+                        help=(f'Set if GeoTiffs in EPSG:4326 should be '
+                              f'created for newly downloaded files.'))
 
     args = parser.parse_args()
 
@@ -410,7 +450,14 @@ def main():
             new_paths = sort_tars.sort_tars(files=successfull_down)
         # TODO only untar successfull_down files
         if args.extract:
-            untar.untar(files=new_paths)
+            untarred_dirs = untar.untar(files=new_paths)
+        if args.geotiff and (all([d is not None for d in untarred_dirs])):
+            tiff_dir = try_create_directory(os.path.join(args.directory,
+                                                         "tiff"))
+            asc_files = get_asc_files(untarred_dirs)
+            create_geotiffs(asc_files, tiff_dir)
+        else:
+            print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
 
 if __name__ == "__main__":
