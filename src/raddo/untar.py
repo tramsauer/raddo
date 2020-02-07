@@ -41,8 +41,10 @@ def untar(**kwargs):
             print("untarring ", filename, end=" ")
             print("to {}".format(f_base))
             tar.extractall(path=f_base)
-            return 0
-        return 1
+            return f_base
+        else:
+            print(str(datetime.now())[:-4] + f"   {f_base} already unpacked.")
+
 
     count_to_tar = 0
     if not files:
@@ -54,32 +56,49 @@ def untar(**kwargs):
         print('\n'+str(datetime.now())[:-4] + \
               '   getting name of files to untar...')
 
+    ret = []
 
-    for filename in files:
-        root = os.path.relpath(os.path.dirname(filename))
-        os.chdir(root)
-        filename = os.path.basename(filename)
+    if any([f is not None for f in files]):
+        for filename in files:
+            if filename is None:
+                continue
+            curdir = os.getcwd()
+            root = os.path.dirname(os.path.abspath(filename))
+            os.chdir(root)
+            filename = os.path.basename(filename)
 
-        f_base = filename.split(".")[0]
-        if re.match(r".+\.tar\.gz$", filename) is not None:
-            count_to_tar += 1
-            save_untar(filename)
-        if re.match(r".+\.tar$", filename) is not None:
-            count_to_tar += 1
-            ret = save_untar(filename)
-            if ret == 0:
-                for gz_root, gz_dirs, gz_files in os.walk(f_base):
-                    for gz_filename in gz_files:
-                        os.chdir(os.path.join(root, gz_root))
-                        f_base = os.path.splitext(gz_filename)[0]
-                        if re.match(r".+\.tar.gz$", gz_filename) is not None:
-                            count_to_tar += 1
-                            save_untar(gz_filename)
+            f_base = filename.split(".")[0]
+            if re.match(r".+\.tar\.gz$", filename) is not None:
+                untarred_file = save_untar(filename)
+                if untarred_file is not None:
+                    ret.append(os.path.join(root, untarred_file))
+                    count_to_tar += 1
+
+            if re.match(r".+\.tar$", filename) is not None:
+                untarred_file = save_untar(filename)
+                if untarred_file is not None:
+                    ret.append(os.path.join(root, untarred_file))
+                    count_to_tar += 1
+                if len(ret) == 0:
+                    for gz_root, gz_dirs, gz_files in os.walk(f_base):
+                        for gz_filename in gz_files:
+                            os.chdir(os.path.join(root, gz_root))
+                            f_base = os.path.splitext(gz_filename)[0]
+                            if re.match(r".+\.tar.gz$",
+                                        gz_filename) is not None:
+                                untarred_file = save_untar(filename)
+                                if untarred_file is not None:
+                                    ret.append(
+                                        os.path.join(root,
+                                                     untarred_file))
+                                    count_to_tar += 1
+            os.chdir(curdir)
+        print(str(datetime.now())[:-4] + "   done.")
+        return ret
 
     if count_to_tar == 0:
         print(str(datetime.now())[:-4] + "   no matching files found.")
-    else:
-        print(str(datetime.now())[:-4] + "   done.")
+        return ret
 
 
 def main():
