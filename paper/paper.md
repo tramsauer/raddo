@@ -1,5 +1,5 @@
 ---
-title: 'radde: A Python package for RADOLAN weather radar data processing'
+title: 'raddo: A Python package for RADOLAN weather radar data provision'
 tags:
   - Python
   - weather radar
@@ -27,64 +27,53 @@ bibliography: paper.bib
 <!--     Your paper (paper.md and BibTeX files, plus any figures) must be hosted in a Git-based repository, ideally together with your software. -->
 
 Precipitation is of paramount importance when studying the water cycle which in turn drives the global climate and climate change.
-Good kowledge on the parts of this mass and energy system is much needed to study different events, e.g. droughts, that may impact humans in their daily life.
+Good knowledge on the parts of this mass and energy system is much needed to study different events, e.g. droughts, that may impact humans in their daily life.
 For example soil moisture and land cover and therefore agriculture hence food production is highly dependent on rainfall.
 Science on hydroclimatic extremes investigates atmospheric conditions which may lead to devastating flooding events.
-Accurate input to improve hydrological model setups is a necessity for these scientific groups.
-Also, general climate modeling also require precise precipitation data to validate against.
-However, hydrological modeling communities struggle to get reliable data for this essential climate valiable (ECV).
+Accurate input to improve hydrological model setups is a necessity for such scientific groups.
+Also, general climate modeling requires precise precipitation data to validate against.
+However, hydrological modeling communities struggle to get reliable data for this essential climate valiable (ECV). **SOURCE**
 
 There are several measuring methods for precipitation with the most prominent in society being traditionl gauge data.
-Only measuring on point scale with limited informative value for nearby areas (kilometers) already is a big downside when it comes to hydrological applications.
+Point scale data inherits limited informative value for nearby areas (kilometers) which is a big drawback for to hydrological applications.
 A spatial representative precipitation data set is thus required.
 In the last decades satellite missions where launched to measure precipitation from space.
-These data sets come with peculiar uncertainties (e.g. winter) and resolutions up to .1° / ~10 km (Global Precipitation Measurement Mission).
+These data sets come with peculiar uncertainties (e.g. winter) and resolutions up to .1° / ~10 km (Global Precipitation Measurement Mission). **SOURCE**
 Weather radars also provide areal representations of the rainfall around the station's location and can deliver data at a high sampling rate and spatial resolution.
 
-RADOLAN is the weather radar system in Germany operated by the Deutscher Wetterdienst (DWD). The data set is
-quirky home-grown geographic
+RADOLAN is the German weather radar system operated by the Deutscher Wetterdienst (DWD).
+It is a gauge adjusted precipitation data set with spatial, temporal and radiometric resolution of 1 km, 1 hourly, .1 mm/h respectively.
+The data set is utilized in several studies already. **SOUCE**
 
-, not used much
+However, a DWD inherent geographic #############
+
+## Goal of software
+The overall goal of the software is to make the RADOLAN data set more accessible to users. A short investigation of single dates e.g. for flooding antecedent precipitation situation is easily possible with ``raddo``.
+
+## Software description
+``raddo`` is a Python package for retrieval and preprocessing of RADOLAN weather radar data and the name stands for RADolan DOwnload and preprocessing software.
+**KREKLOW**
+
+The software operates in several steps which can be accessed through the commandline interface.
+The first step is to make a local list of potentially to load data sets. This is done to elleviate DWD's server from too many requests and is also based on difficulties in reaching the data store of RADOLAN data.
+Next, the data is sorted, untarred or gunzipped depending on dataset.
+Finally, ...
+
+3 reproject aggregate
+
+[@Binney:2008]
 
 
 
+# Acknowledgements
+
+We acknowledge DWD for openly providing the RADOLAN data free of charge under the following url:
+
+# References
 
 
+<!-- -------------------------------------------- -->
 
-
-
-
-
-The forces on stars, galaxies, and dark matter under external gravitational
-
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
-
-``Gala`` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for ``Gala`` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. ``Gala`` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the ``Astropy`` package [@astropy] (``astropy.units`` and
-``astropy.coordinates``).
-
-``Gala`` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in ``Gala`` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
 
 # Mathematics
 
@@ -112,9 +101,3 @@ For a quick reference, the following citation commands can be used:
 # Figures
 
 Figures can be included like this: ![Example figure.](figure.png)
-
-# Acknowledgements
-
-We acknowledge DWD for providing the RADOLAN data in an open manner and free of charge.
-
-# References
