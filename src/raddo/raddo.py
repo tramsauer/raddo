@@ -17,6 +17,7 @@ import argparse
 from dateutil.parser import parse
 from urllib.request import urlretrieve
 from urllib.error import HTTPError
+from urllib.error import URLError
 
 from raddo import sort_tars
 from raddo import untar
@@ -49,6 +50,7 @@ class pcol:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 
 def radolan_down(rad_dir_dwd=rad_dir_dwd,
                  rad_dir=rad_dir,
@@ -197,6 +199,12 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                       "   [SUCCESS] {} downloaded.\n".format(f))
                 files_success.append(f)
                 break
+
+            except URLError as e:
+                sys.stderr.write(f"\nERROR: {e}\n")
+                sys.stderr.write("Do you have internet connection?\n")
+                sys.exit(1)
+
             except HTTPError as err:
                 if err.code == 404:
                     # try historical data
@@ -316,20 +324,31 @@ def main():
                         action='store_true', dest='yes',
                         help=(f'Skip user input. Just accept to download to '
                               'current directory if not specified otherwise.'))
+    parser.add_argument('-V', '--version',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='version',
+                        help=(f'Print information on software version.'))
 
     args = parser.parse_args()
+
     if args.directory == os.getcwd():
-        if args.yes:
+        if not args.yes:
             print(f"Do you really want to store RADOLAN data in "
-                f"\"{os.getcwd()}\"?")
+                  f"\"{os.getcwd()}\"?")
             do = input("[y/N] ")
             if do in valid_y:
                 pass
             elif do in valid_n:
-                raise Exception("User interruption.")
+                sys.sterr.write(f"User Interruption.\n")
+                sys.exit()
 
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
+
+    if args.version:
+        sys.stdout.write(f"raddo {__version__}\n")
+        sys.exit()
 
     successfull_down = radolan_down(rad_dir_dwd=args.url,
                                     rad_dir=args.directory,
