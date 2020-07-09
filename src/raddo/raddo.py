@@ -14,6 +14,10 @@ import re
 import glob
 import datetime
 import argparse
+import gdal
+import numpy as np
+import pandas as pd
+import xarray as xr
 
 from dateutil.parser import parse
 from urllib.request import urlretrieve
@@ -43,6 +47,8 @@ errors_allowed = 5
 valid_y = ["y", "Y"]
 valid_n = ["n", "N", ""]
 
+DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
+            "+a=6370040 +b=6370040 +units=m")
 
 class pcol:
     HEADER = '\033[95m'
@@ -343,19 +349,82 @@ def get_asc_files(directories):
     dirs = list(set(list(directories)))
     fl = []
     for d in dirs:
-        [fl.append(f) for f in glob.glob(os.path.join(d, "*asc"),
+        [fl.append(f) for f in glob.glob(os.path.join(d, "**/*asc"),
                                          recursive=True)]
     return fl
 
 
-def create_geotiffs(filelist, outdir):
-    for f in filelist:
+def create_netcdf(filelist, outdir):
+    assert type(filelist) == list
+    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                     '   creating NetCDF file...\n')
 
+    outf = os.path.join(outdir, "RADOLAN.nc")
+
+    def time_index_from_filenames(filenames):
+        '''helper function to create a pandas DatetimeIndex
+        Filename example: 20150520_0164.tif'''
+        return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
+
+    base_f_list = sorted([os.path.basename(f) for f in filelist])
+    time = xr.Variable('time', time_index_from_filenames(base_f_list))
+    da = xr.concat([xr.open_rasterio(f) for f in filelist], dim=time)
+    da = da.to_dataset(name="radolan")
+    da = da.rename_dims({'x': 'lon',
+                         'y': 'lat'})
+    # import pdb; pdb.set_trace()
+    # mask nodata (-1) as np.nan && compensate for 1/10 mm
+    # (although writing as integer for compressing reasons)
+    da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
+    da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
+                                             'scale_factor': 0.1,
+                                             'zlib': True,
+                                             '_FillValue': -9999}})
+    #               noda)
+    # da.to_netcdf(outf)
+
+    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                     '   done.\n')
+    sys.stdout.flush()
+    return outf
+
+
+def create_geotiffs(filelist, outdir):
+    assert type(filelist) == list
+    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                     '   creating geotiffs..\n')
+
+    res = []
+    for i, f in enumerate(filelist):
+        sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                         f'   [{i}]  {os.path.basename(f)}')
+        # sys.stdout.flush()
         outf = os.path.join(outdir,
                             os.path.splitext(os.path.basename(f))[0] + ".tiff")
-        reproject = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "reproject_radolan_geotiff.sh")
-        os.system(f"{reproject} {f} {outf}")
+        # reproject = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 # "reproject_radolan_geotiff.sh")
+
+
+        # with gdal.Open(f) as dataset:
+        gdal.Warp(outf, f,
+                  dstSRS="EPSG:4326",
+                  srcSRS=DWD_PROJ,
+                  resampleAlg='near',
+                  format='GTiff')
+        res.append(outf)
+    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                     '   done.\n')
+    sys.stdout.flush()
+    return res
+
+
+def user_check():
+    do = input("[y/N] ")
+    if do in valid_y:
+        pass
+    elif do in valid_n:
+        sys.stderr.write(f"User Interruption.\n")
+        sys.exit()
 
 
 def main():
@@ -367,9 +436,11 @@ def main():
             sys.exit(2)
 
     parser = MyParser(
-        description=('Utility to download RADOLAN data from DWD servers.'),
+        description=(
+            ' raddo - utility to download RADOLAN data from DWD servers\n'
+            '         and prepare for simple usage.'),
         prog="raddo",
-        # usage='%(prog)s directory [-h] [-p]'
+        usage='run "%(prog)s -h"  for all cli options.'
         )
 
     parser.add_argument('-u', '--radolan_server_url',
@@ -418,49 +489,94 @@ def main():
                         default=False,
                         action='store_true', dest='extract',
                         help=(f'Should the data be extracted?'))
-    parser.add_argument('-y', '--yes',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='yes',
-                        help=(f'Skip user input. Just accept to download to '
-                              'current directory if not specified otherwise.'))
-    parser.add_argument('-V', '--version',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='version',
-                        help=(f'Print information on software version.'))
     parser.add_argument('-g', '--geotiff',
                         required=False,
                         default=False,
                         action='store_true', dest='geotiff',
                         help=(f'Set if GeoTiffs in EPSG:4326 should be '
                               f'created for newly downloaded files.'))
+    parser.add_argument('-n', '--netcdf',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='netcdf',
+                        help=(f'Create a NetCDF from GeoTiffs?'))
+
+    parser.add_argument('-C', '--complete',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='complete',
+                        help=(f'Run all subcommands. Same as using flags '
+                              f'-fxgn.'))
+
+    parser.add_argument('-y', '--yes',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='yes',
+                        help=(f'Skip user input. Just accept to download to '
+                              'current directory if not specified otherwise.'))
+    # parser.add_argument('-q', '--quiet',
+    #                     required=False,
+    #                     default=False,
+    #                     action='store_true', dest='quiet',
+    #                     help=(f'Be quiet.'))
+    parser.add_argument('-F', '--force',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='force',
+                        help=(f'Forces local file search. Omits faster check '
+                              'of ".raddo_local_files.txt".'))
+    parser.add_argument('-D', '--force-download',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='force_down',
+                        help=(f'Forces download of all files.'))
+
+    parser.add_argument('-v', '--version',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='version',
+                        help=(f'Print information on software version.'))
 
     args = parser.parse_args()
+    if args.complete:
+        args.netcdf = True
+        args.geotiff = True
+        args.extract = True
+        args.sort = True
 
+    # print version
+    if args.version:
+        sys.stdout.write(f"raddo {__version__}\n")
+        sys.exit()
+
+    # if not args.quiet:
+    sys.stdout.write(
+        pcol.HEADER + 59*'=' + '\n' +
+        parser.description + "\n" +
+        59*"=" + pcol.ENDC + "\n\n")
+
+    # if no -d flag:
     if args.directory == os.getcwd():
         if not args.yes:
             print(f"Do you really want to store RADOLAN data in "
                   f"\"{os.getcwd()}\"?")
-            do = input("[y/N] ")
-            if do in valid_y:
-                pass
-            elif do in valid_n:
-                sys.sterr.write(f"User Interruption.\n")
-                sys.exit()
+            user_check()
+    if args.start == start_date:
+        if not args.yes:
+            print(f"Do you really want to download RADOLAN data from "
+                  f"{start_date} on?")
+            user_check()
 
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
-
-    if args.version:
-        sys.stdout.write(f"raddo {__version__}\n")
-        sys.exit()
 
     successfull_down = radolan_down(rad_dir_dwd=args.url,
                                     rad_dir=args.directory,
                                     errors_allowed=int(args.errors),
                                     start_date=args.start,
-                                    end_date=args.end)
+                                    end_date=args.end,
+                                    force=args.force,
+                                    force_down=args.force_down)
     if len(successfull_down) > 0:
         if args.sort:
             # sort_tars.sort_tars(path=args.directory)
@@ -468,11 +584,14 @@ def main():
         # TODO only untar successfull_down files
         if args.extract:
             untarred_dirs = untar.untar(files=new_paths)
-        if args.geotiff and (all([d is not None for d in untarred_dirs])):
+
+        if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
             tiff_dir = try_create_directory(os.path.join(args.directory,
                                                          "tiff"))
             asc_files = get_asc_files(untarred_dirs)
-            create_geotiffs(asc_files, tiff_dir)
+            gtiff_files = create_geotiffs(asc_files, tiff_dir)
+            if args.netcdf:
+                create_netcdf(gtiff_files, args.directory)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
