@@ -15,7 +15,6 @@ import glob
 import datetime
 import argparse
 import gdal
-import numpy as np
 import pandas as pd
 import xarray as xr
 
@@ -49,6 +48,7 @@ valid_n = ["n", "N", ""]
 
 DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
             "+a=6370040 +b=6370040 +units=m")
+
 
 class pcol:
     HEADER = '\033[95m'
