@@ -18,14 +18,26 @@ __copyright__ = "Thomas Ramsauer"
 __license__ = "gpl3"
 
 
-def sort_tars(path):
-    os.chdir(path)
-    print("\n"+str(datetime.now())[:-4] + f'   getting filenames in {path}..')
+def sort_tars(**kwargs):
+    print("\n"+str(datetime.now())[:-4] + f'   started sorting of files..')
     fileSet = glob.glob('*.tar*')
+
+    path = kwargs.get('path', None)
+    files = kwargs.get('files', None)
+    assert (path is not None) or (files is not None), \
+        "Please either specify a path or filelist to untar."
+
+    if path:
+        os.chdir(path)
+        print("\n"+str(datetime.now())[:-4] + f'   getting filenames in {path}..')
+        fileSet = glob.glob('*.tar*')
+    else:
+        fileSet = files
 
     if len(fileSet) == 0:
         print('No files found.')
     else:
+        new_paths = []
         for file in fileSet:
             year = file[3:7]
             if not os.path.splitext(file)[-1] == ".tar":
@@ -38,9 +50,12 @@ def sort_tars(path):
             try:
                 os.system('mkdir -vp {}'.format(future_file_path))
                 os.system('mv -v {} {}'.format(file, future_file_path))
+                new_paths.append(os.path.join(future_file_path, file))
             except Exception:
                 print('ERROR.')
+
     print("\n" + str(datetime.now())[:-4], 'Sorting finished.')
+    return new_paths
 
 
 def main():
