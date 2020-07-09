@@ -65,7 +65,9 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                  rad_dir=rad_dir,
                  errors_allowed=errors_allowed,
                  start_date=start_date,
-                 end_date=end_date):
+                 end_date=end_date,
+                 force=False,
+                 force_down=False):
     """
     radolan_down()  tries to download all recent RADOLAN ascii files/archives
     from DWD FTP to specified directory if files do not exist.
@@ -94,6 +96,11 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
         errors_allowed: integer
             number of tries to download one file (default: 5)
+        force:
+            Forces local file search. Omits faster check of
+            .raddo_local_files.txt".
+        force_down:
+            Forces download of all files.
 
     """
     # Set dates
@@ -128,6 +135,8 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
         search = True
         if rad_dir == os.getcwd():
             search = False
+    elif force is True:
+        search = True
     else:
         dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
                        for f in list_of_available_files()]
@@ -178,7 +187,9 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
 
     # Compare local and remote list
     missing_files = []
-    if search:
+    if force_down:
+        missing_files = list_DWD.copy()
+    elif search:
         for f in list_DWD:
             if f not in fileSet:
                 if hist_filename(f) not in fileSet_hist:
