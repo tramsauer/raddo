@@ -17,12 +17,19 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 
 ## Installation
 
-Clone this repository and run:
+Clone this repository, change into new directory and run:
 
-``` python
+``` sh
+git clone <repo-url>
+cd raddo
 python setup.py install
 ```
 
+or
+``` sh
+python setup.py develop
+```
+if you want to work on the code.
 
 ## Usage
 
