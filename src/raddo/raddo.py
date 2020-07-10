@@ -230,10 +230,6 @@ def radolan_down(rad_dir_dwd=rad_dir_dwd,
                 print(str(datetime.datetime.now())[:-4],
                       "    [{}] trying {}{}"
                       .format(error_count, rad_dir_dwd, f))
-                # response = urlopen("{}{}".format(rad_dir_dwd, f),
-                #                            timeout=60)
-                # with open(f, "w") as dest:
-                #     dest.write(response.read().decode(response.headers.get_content_charset()))
                 urlretrieve(rad_dir_dwd+f, f)
                 size = os.path.getsize(f)
                 if size == 0:
@@ -391,14 +387,13 @@ def create_netcdf(filelist, outdir):
     # mask nodata (-1) as np.nan && compensate for 1/10 mm
     # (although writing as integer for compressing reasons)
     da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
-    da['radolan'].attrs['long_name'] = 'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
+    da['radolan'].attrs['long_name'] = \
+        'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
     da['radolan'].attrs['units'] = 'mm/h'
     da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
                                              'scale_factor': 0.1,
                                              'zlib': True,
                                              '_FillValue': -9999}})
-    #               noda)
-    # da.to_netcdf(outf)
 
     sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                      '   done.\n')
@@ -415,14 +410,9 @@ def create_geotiffs(filelist, outdir):
     for i, f in enumerate(filelist):
         sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                          f'   [{i}]  {os.path.basename(f)}')
-        # sys.stdout.flush()
         outf = os.path.join(outdir,
                             os.path.splitext(os.path.basename(f))[0] + ".tiff")
-        # reproject = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 # "reproject_radolan_geotiff.sh")
 
-
-        # with gdal.Open(f) as dataset:
         gdal.Warp(outf, f,
                   dstSRS="EPSG:4326",
                   srcSRS=DWD_PROJ,
