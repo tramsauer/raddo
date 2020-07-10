@@ -32,19 +32,20 @@ __copyright__ = "Thomas Ramsauer"
 __license__ = "gpl3"
 
 
-rad_dir_dwd = ("https://opendata.dwd.de/climate_environment/CDC/"
+RAD_DIR_DWD = ("https://opendata.dwd.de/climate_environment/CDC/"
                "grids_germany/hourly/radolan/recent/asc/")
-rad_dir_dwd_hist = ("https://opendata.dwd.de/climate_environment/CDC/"
+RAD_DIR_DWD_HIST = ("https://opendata.dwd.de/climate_environment/CDC/"
                     "grids_germany/hourly/radolan/historical/asc/")
-rad_dir = os.getcwd()
+RAD_DIR = os.getcwd()
+
 # TODO ($USERCONFIG/.raddo/local_files) ??
 FILELIST = ".raddo_local_files.txt"
-start_date = f"{datetime.datetime.today().year}-01-01"
-end_date = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
-end_date_str = datetime.datetime.strftime(end_date, "%Y-%m-%d")
-errors_allowed = 5
-valid_y = ["y", "Y"]
-valid_n = ["n", "N", ""]
+START_DATE = f"{datetime.datetime.today().year}-01-01"
+END_DATE = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
+END_DATE_STR = datetime.datetime.strftime(END_DATE, "%Y-%m-%d")
+ERRORS_ALLOWED = 5
+VALID_Y = ["y", "Y"]
+VALID_N = ["n", "N", ""]
 
 DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
             "+a=6370040 +b=6370040 +units=m")
@@ -61,11 +62,12 @@ class pcol:
     UNDERLINE = '\033[4m'
 
 
-def radolan_down(rad_dir_dwd=rad_dir_dwd,
-                 rad_dir=rad_dir,
-                 errors_allowed=errors_allowed,
-                 start_date=start_date,
-                 end_date=end_date,
+def radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                 rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                 rad_dir=RAD_DIR,
+                 errors_allowed=ERRORS_ALLOWED,
+                 start_date=START_DATE,
+                 end_date=END_DATE,
                  force=False,
                  force_down=False):
     """
@@ -427,9 +429,9 @@ def create_geotiffs(filelist, outdir):
 
 def user_check():
     do = input("[y/N] ")
-    if do in valid_y:
+    if do in VALID_Y:
         pass
-    elif do in valid_n:
+    elif do in VALID_N:
         sys.stderr.write(f"User Interruption.\n")
         sys.exit()
 
@@ -452,10 +454,10 @@ def main():
 
     parser.add_argument('-u', '--radolan_server_url',
                         required=False,
-                        default=rad_dir_dwd,
+                        default=RAD_DIR_DWD,
                         action='store', dest='url',
                         help=(f'Path to recent .asc RADOLAN data on '
-                              f'DWD servers.\nDefault: {rad_dir_dwd}'))
+                              f'DWD servers.\nDefault: {RAD_DIR_DWD}'))
 
     parser.add_argument('-d', '--directory',
                         required=False,
@@ -467,25 +469,25 @@ def main():
                               f'\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
-                        default=start_date,
+                        default=START_DATE,
                         action='store', dest='start',
                         help=(f'Start date as parsable string '
                               f'(e.g. "2018-05-20").'
-                              f'\nDefault: {start_date} '
+                              f'\nDefault: {START_DATE} '
                               f'(current year\'s Jan 1st)'))
     parser.add_argument('-e', '--end',
                         required=False,
-                        default=end_date,
+                        default=END_DATE,
                         action='store', dest='end',
                         help=(f'End date as parsable string '
                               f'(e.g. "2018-05-20").'
-                              f'\nDefault: {end_date_str} (yesterday)'))
+                              f'\nDefault: {END_DATE_STR} (yesterday)'))
     parser.add_argument('-r', '--errors-allowed',
                         required=False,
-                        default=errors_allowed,
+                        default=ERRORS_ALLOWED,
                         action='store', dest='errors',
                         help=(f'Errors allowed when contacting DWD Server.'
-                              f'\nDefault: {errors_allowed}'))
+                              f'\nDefault: {ERRORS_ALLOWED}'))
     parser.add_argument('-f', '--sort-in-folders',
                         required=False,
                         default=False,
@@ -568,10 +570,10 @@ def main():
             print(f"Do you really want to store RADOLAN data in "
                   f"\"{os.getcwd()}\"?")
             user_check()
-    if args.start == start_date:
+    if args.start == START_DATE:
         if not args.yes:
             print(f"Do you really want to download RADOLAN data from "
-                  f"{start_date} on?")
+                  f"{START_DATE} on?")
             user_check()
 
     assert args.errors < 21, \
