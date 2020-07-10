@@ -26,14 +26,15 @@ python setup.py install
 
 ## Usage
 
-Download RADOLAN data from *2019-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
+Download RADOLAN data from *{current-year}-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
 
 
 ``` sh
 usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
-             [-x]
+             [-x] [-g] [-n] [-C] [-y] [-F] [-D] [-v]
 
-Utility to download RADOLAN data from DWD servers.
+raddo - utility to download RADOLAN data from DWD servers and prepare for
+simple usage.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -43,100 +44,35 @@ optional arguments:
                         DC/grids_germany/hourly/radolan/recent/asc/
   -d DIRECTORY, --directory DIRECTORY
                         Path to local directory where RADOLAN shouldbe (and
-                        may already be) saved. Default:
-                        /home/tramsauer/Code/raddo
+                        may already be) saved. Checks for existing files only
+                        if this flag is set. Default: /tmp/raddo_test (current
+                        directory)
   -s START, --start START
                         Start date as parsable string (e.g. "2018-05-20").
-                        Default: 2019-01-01
+                        Default: 2020-01-01 (current year's Jan 1st)
   -e END, --end END     End date as parsable string (e.g. "2018-05-20").
-                        Default: 2019-10-15 18:32:10.296252
-  -r ERRORS, --Errors-allowed ERRORS
+                        Default: 2020-07-09 (yesterday)
+  -r ERRORS, --errors-allowed ERRORS
                         Errors allowed when contacting DWD Server. Default: 5
   -f, --sort-in-folders
                         Should the data be sorted in folders?
   -x, --extract         Should the data be extracted?
+  -g, --geotiff         Set if GeoTiffs in EPSG:4326 should be created for
+                        newly downloaded files.
+  -n, --netcdf          Create a NetCDF from GeoTiffs?
+  -C, --complete        Run all subcommands. Same as using flags -fxgn.
+  -y, --yes             Skip user input. Just accept to download to current
+                        directory if not specified otherwise.
+  -F, --force           Forces local file search. Omits faster check of
+                        ".raddo_local_files.txt".
+  -D, --force-download  Forces download of all files.
+  -v, --version         Print information on software version.
 
 ```
 ### Example
 
-Downloading, sorting and extracting RADOLAN data for date range 2019-05-05 - 2019-05-11:
 
-```
-$ raddo -fx -s '2019-05-05' -e '2019-05-11'
-Do you really want to store RADOLAN data in "/tmp/raddo_test"?
-[y/N] y
-
---------------------------------------------------------------
-[LOCAL]  Radolan directory is set to:
-/tmp/raddo_test
-
-[REMOTE] Radolan directory is set to:
-https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/
-
-searching for data from 2019-05-05 - 2019-05-11.
-
---------------------------------------------------------------
-2019-10-15 18:41:03.33    getting names of local files in directory:
-                          .../tmp/raddo_test
-2019-10-15 18:41:03.33    0 local archive(s) found.
-
-2019-10-15 18:41:03.33    6 file(s) missing.
-
-Missing files:
-
-RW-20190505.tar.gz
-RW-20190506.tar.gz
-RW-20190507.tar.gz
-RW-20190508.tar.gz
-RW-20190509.tar.gz
-RW-20190510.tar.gz
-2019-10-15 18:41:03.33    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190505.tar.gz
-2019-10-15 18:41:03.47    [SUCCESS] RW-20190505.tar.gz downloaded.
-
-2019-10-15 18:41:03.47    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190506.tar.gz
-2019-10-15 18:41:03.60    [SUCCESS] RW-20190506.tar.gz downloaded.
-
-2019-10-15 18:41:03.60    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190507.tar.gz
-2019-10-15 18:41:03.72    [SUCCESS] RW-20190507.tar.gz downloaded.
-
-2019-10-15 18:41:03.72    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190508.tar.gz
-2019-10-15 18:41:03.87    [SUCCESS] RW-20190508.tar.gz downloaded.
-
-2019-10-15 18:41:03.87    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190509.tar.gz
-2019-10-15 18:41:04.01    [SUCCESS] RW-20190509.tar.gz downloaded.
-
-2019-10-15 18:41:04.01    [0] trying https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/RW-20190510.tar.gz
-2019-10-15 18:41:04.14    [SUCCESS] RW-20190510.tar.gz downloaded.
-
-
-2019-10-15 18:41:04.14   getting filenames in /tmp/raddo_test..
-mkdir: created directory './2019'
-mkdir: created directory './2019/RW-201905'
-renamed 'RW-20190510.tar.gz' -> './2019/RW-201905/RW-20190510.tar.gz'
-renamed 'RW-20190509.tar.gz' -> './2019/RW-201905/RW-20190509.tar.gz'
-renamed 'RW-20190508.tar.gz' -> './2019/RW-201905/RW-20190508.tar.gz'
-renamed 'RW-20190507.tar.gz' -> './2019/RW-201905/RW-20190507.tar.gz'
-renamed 'RW-20190506.tar.gz' -> './2019/RW-201905/RW-20190506.tar.gz'
-renamed 'RW-20190505.tar.gz' -> './2019/RW-201905/RW-20190505.tar.gz'
-
-2019-10-15 18:41:04.18 Sorting finished.
-
-2019-10-15 18:41:04.18   getting filenames...
-untarring  2019/RW-201905/RW-20190505.tar.gz to 2019/RW-201905/RW-20190505
-untarring  2019/RW-201905/RW-20190506.tar.gz to 2019/RW-201905/RW-20190506
-untarring  2019/RW-201905/RW-20190507.tar.gz to 2019/RW-201905/RW-20190507
-untarring  2019/RW-201905/RW-20190508.tar.gz to 2019/RW-201905/RW-20190508
-untarring  2019/RW-201905/RW-20190509.tar.gz to 2019/RW-201905/RW-20190509
-untarring  2019/RW-201905/RW-20190510.tar.gz to 2019/RW-201905/RW-20190510
-
-2019-10-15 18:41:04.84   Untarred 6 archives in: 0.665s
-                         0 archive(s) skipped
-
-```
-
-#### The terminal prompt may look something like this
-
-![example image should load here...](prompt.png "Terminal prompt")
+![example image should load here...](raddo.gif "Terminal prompt")
 
 
 ### Crontab ###
@@ -200,6 +136,13 @@ rd.radolan_down(rad_dir_dwd = ...,  )
         errors_allowed: integer
             number of tries to download one file (default: 5)
 
+        force:
+            Forces local file search. Omits faster check of
+            .raddo_local_files.txt".
+
+        force_down:
+            Forces download of all files.
+
  ```
 
 
@@ -219,13 +162,15 @@ See [Changelog](CHANGELOG.rst) document.
 ## Further Development
 
 - [X] add historical
-- [ ] integrate GeoTiff generation (reprojection)
-- [ ] integrate aggregation to NetCDF files
+- [X] integrate GeoTiff generation (reprojection)
+- [X] integrate aggregation to NetCDF files
+- [ ] add tests!
+- [ ] add docs
 - [ ] add DOI
 - [ ] pip install?
 - [ ] add pypi install
 - [ ] add conda install
-- [ ] gif for cli
+- [X] gif for cli
 
 ## See also
 

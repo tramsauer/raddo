@@ -451,7 +451,7 @@ def main():
             ' raddo - utility to download RADOLAN data from DWD servers\n'
             '         and prepare for simple usage.'),
         prog="raddo",
-        usage='run "%(prog)s -h"  for all cli options.'
+        # usage='run "%(prog)s -h"  for all cli options.'
         )
 
     parser.add_argument('-u', '--radolan_server_url',
