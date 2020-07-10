@@ -383,10 +383,16 @@ def create_netcdf(filelist, outdir):
     da = da.to_dataset(name="radolan")
     da = da.rename_dims({'x': 'lon',
                          'y': 'lat'})
-    # import pdb; pdb.set_trace()
+    da = da.rename_vars({'x': 'lon',
+                         'y': 'lat'})
+    da = da.assign_coords({"lon": da.lon,
+                           "lat": da.lat})
+
     # mask nodata (-1) as np.nan && compensate for 1/10 mm
     # (although writing as integer for compressing reasons)
     da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
+    da['radolan'].attrs['long_name'] = 'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
+    da['radolan'].attrs['units'] = 'mm/h'
     da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
                                              'scale_factor': 0.1,
                                              'zlib': True,
