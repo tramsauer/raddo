@@ -1,5 +1,8 @@
 # raddo
 
+[![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
+
+
 *raddo* is a no-frills software that prepares RADOLAN weather radar precipitation data for simple usage.
 
 *raddo* downloads RADOLAN weather radar ascii data (*tar.gz). Downloaded files are sorted in folders based on year and month and may also be untarred.
@@ -158,7 +161,7 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 See [CONTRIBUTIONS](CONTRIBUTIONS.md) document.
 
 ## License
-[![license badge](https://img.shields.io/badge/license-GNU_GPLv3-lightgrey)](LICENSE.txt)
+[![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 
 Please find the license aggreement in [LICENSE.txt](LICENSE.txt)
 
