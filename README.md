@@ -56,7 +56,7 @@ optional arguments:
                         directory)
   -s START, --start START
                         Start date as parsable string (e.g. "2018-05-20").
-                        Default: 2020-01-01 (current year's Jan 1st)
+                        Default: 2020-01-01 (current year\'s Jan 1st)
   -e END, --end END     End date as parsable string (e.g. "2018-05-20").
                         Default: 2020-07-09 (yesterday)
   -r ERRORS, --errors-allowed ERRORS
