@@ -34,7 +34,8 @@ def test_property_list_of_files():
 
 
 def test_local_file_list():
-    print(Raddo.local_file_list_exists())
+    rd = Raddo()
+    print(rd.local_file_list_exists())
 
 
 def test_trycreatedir():

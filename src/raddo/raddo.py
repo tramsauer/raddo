@@ -14,6 +14,7 @@ import re
 import glob
 import datetime
 import argparse
+import tempfile
 import gdal
 import pandas as pd
 import xarray as xr
@@ -313,7 +314,6 @@ class Raddo(object):
 
         return files_success
 
-    @classmethod
     def local_file_list_exists(self):
         return os.path.exists(self.FILELIST)
 
@@ -409,10 +409,6 @@ class Raddo(object):
         return outf
 
     def create_geotiffs(self, filelist, outdir):
-        if not self.yes:
-            if len(filelist) > 2 * 24:
-                user_check("Do you really want to create "
-                           f"{len(filelist)} geotiffs?")
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating geotiffs..\n')
@@ -601,21 +597,40 @@ def main():
                                        yes=args.yes)
     if len(successfull_down) > 0:
         if args.sort:
-            # sort_tars.sort_tars(path=args.directory)
             new_paths = sort_tars.sort_tars(files=successfull_down)
-        # TODO only untar successfull_down files
         if args.extract:
             untarred_dirs = untar.untar(files=new_paths)
 
         if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
-            tiff_dir = rd.try_create_directory(os.path.join(args.directory,
-                                                            "tiff"))
             asc_files = rd.get_asc_files(untarred_dirs)
+
+            # create tiff directory
+            if args.geotiff:
+                tiff_dir = rd.try_create_directory(
+                    os.path.join(args.directory, "tiff"))
+                if not args.yes:
+                    if len(asc_files) > 7 * 24:
+                        user_check("Do you really want to create "
+                                   f"{len(asc_files)} geotiffs?")
+
+            # create temporary directory if geotiffs are not wanted:
+            else:
+                args.yes = True
+                tmpd = tempfile.TemporaryDirectory()
+                tiff_dir = tmpd.name
+
+            # create geotiffs
             gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+
             if args.netcdf:
                 rd.create_netcdf(gtiff_files, args.directory)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
+
+        try:
+            tmpd.cleanup()
+        except NameError:
+            pass
 
 
 if __name__ == "__main__":
