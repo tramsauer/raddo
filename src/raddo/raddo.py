@@ -116,6 +116,7 @@ class Raddo(object):
         end_date = kwargs.get('end_date', self.END_DATE)
         force = kwargs.get('force', False)
         force_down = kwargs.get('force_down', False)
+        self.yes = kwargs.get('yes', False)
 
         # Set dates
         if end_date == "today":
@@ -408,6 +409,10 @@ class Raddo(object):
         return outf
 
     def create_geotiffs(self, filelist, outdir):
+        if not self.yes:
+            if len(filelist) > 2 * 24:
+                user_check("Do you really want to create "
+                           f"{len(filelist)} geotiffs?")
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating geotiffs..\n')
@@ -431,7 +436,8 @@ class Raddo(object):
         return res
 
 
-def user_check():
+def user_check(question):
+    sys.stdout.write(question+" ")
     do = input("[y/N] ")
     if do in VALID_Y:
         pass
@@ -591,7 +597,8 @@ def main():
                                        start_date=args.start,
                                        end_date=args.end,
                                        force=args.force,
-                                       force_down=args.force_down)
+                                       force_down=args.force_down,
+                                       yes=args.yes)
     if len(successfull_down) > 0:
         if args.sort:
             # sort_tars.sort_tars(path=args.directory)
