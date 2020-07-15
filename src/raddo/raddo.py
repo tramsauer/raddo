@@ -137,13 +137,8 @@ class Raddo(object):
         files_success = []
         os.chdir(rad_dir)
 
-        # TODO sensible??
-        search = False
-        if not self.local_file_list_exists():
-            search = True
-            if rad_dir == os.getcwd():
-                search = False
-        elif force is True:
+        search = not self.local_file_list_exists()
+        if force or search:
             search = True
         else:
             dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
