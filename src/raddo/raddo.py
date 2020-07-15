@@ -32,23 +32,8 @@ __copyright__ = "Thomas Ramsauer"
 __license__ = "gpl3"
 
 
-RAD_DIR_DWD = ("https://opendata.dwd.de/climate_environment/CDC/"
-               "grids_germany/hourly/radolan/recent/asc/")
-RAD_DIR_DWD_HIST = ("https://opendata.dwd.de/climate_environment/CDC/"
-                    "grids_germany/hourly/radolan/historical/asc/")
-RAD_DIR = os.getcwd()
-
-# TODO ($USERCONFIG/.raddo/local_files) ??
-FILELIST = ".raddo_local_files.txt"
-START_DATE = f"{datetime.datetime.today().year}-01-01"
-END_DATE = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
-END_DATE_STR = datetime.datetime.strftime(END_DATE, "%Y-%m-%d")
-ERRORS_ALLOWED = 5
 VALID_Y = ["y", "Y"]
 VALID_N = ["n", "N", ""]
-
-DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
-            "+a=6370040 +b=6370040 +units=m")
 
 
 class pcol:
@@ -65,17 +50,23 @@ class pcol:
 class Raddo(object):
 
     def __init__(self):
-        pass
+        self.FILELIST = ".raddo_local_files.txt"
+        self.ERRORS_ALLOWED = 5
+        self.RAD_DIR_DWD = ("https://opendata.dwd.de/climate_environment/CDC/"
+                            "grids_germany/hourly/radolan/recent/asc/")
+        self.RAD_DIR_DWD_HIST = ("https://opendata.dwd.de/climate_environment/CDC/"
+                                 "grids_germany/hourly/radolan/historical/asc/")
+        self.RAD_DIR = os.getcwd()
 
-    def radolan_down(self,
-                     rad_dir_dwd=RAD_DIR_DWD,
-                     rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
-                     rad_dir=RAD_DIR,
-                     errors_allowed=ERRORS_ALLOWED,
-                     start_date=START_DATE,
-                     end_date=END_DATE,
-                     force=False,
-                     force_down=False):
+        # TODO ($USERCONFIG/.raddo/local_files) ??
+        self.START_DATE = f"{datetime.datetime.today().year}-01-01"
+        self.END_DATE = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
+        self.END_DATE_STR = datetime.datetime.strftime(self.END_DATE, "%Y-%m-%d")
+
+        self.DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
+                         "+a=6370040 +b=6370040 +units=m")
+
+    def radolan_down(self, *args, **kwargs):
         """
         radolan_down()  tries to download all recent RADOLAN ascii files/
         archives from DWD FTP to specified directory if files do not exist.
@@ -85,12 +76,17 @@ class Raddo(object):
         unreliable connection. Timeout is 60 secs per retrieval attempt and
         50 tries are made.
 
-        PARAMETERS:
+        Keyword Arguments:
         -------------------------
             rad_dir_dwd: string
                 Link to Radolan products on DWD FTP server.
                 defaults to "https://opendata.dwd.de/climate_environment/CDC/
                             grids_germany/hourly/radolan/recent/asc/")
+
+            rad_dir_dwd_hist: string
+                Link to Radolan products on DWD FTP server.
+                defaults to "https://opendata.dwd.de/climate_environment/CDC/"
+                            "grids_germany/hourly/radolan/historical/asc/"
 
             rad_dir: string
                 local directory to be processed / already containing radolan data.
@@ -111,6 +107,16 @@ class Raddo(object):
                 Forces download of all files.
 
         """
+
+        rad_dir_dwd = kwargs.get('rad_dir_dwd', self.RAD_DIR_DWD)
+        rad_dir_dwd_hist = kwargs.get('rad_dir_dwd_hist', self.RAD_DIR_DWD_HIST)
+        rad_dir = kwargs.get('rad_dir', self.RAD_DIR)
+        errors_allowed = kwargs.get('errors_allowed', self.ERRORS_ALLOWED)
+        start_date = kwargs.get('start_date', self.START_DATE)
+        end_date = kwargs.get('end_date', self.END_DATE)
+        force = kwargs.get('force', False)
+        force_down = kwargs.get('force_down', False)
+
         # Set dates
         if end_date == "today":
             end_datetime = datetime.datetime.today()
@@ -120,6 +126,8 @@ class Raddo(object):
             end_datetime = parse(end_date)
 
         start_datetime = parse(start_date)
+        print((end_datetime - start_datetime).days)
+        assert (end_datetime - start_datetime).days > 0
 
         print(pcol.BOLD+pcol.OKBLUE)
         print("-" * 80)
@@ -142,7 +150,7 @@ class Raddo(object):
             search = True
         else:
             dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
-                           for f in self.list_of_available_files()]
+                           for f in self.list_of_available_files]
 
         # Get filenames if directory is specified
         if search:
@@ -203,7 +211,7 @@ class Raddo(object):
             if not len(fileSet) == 0:
                 print(str(datetime.datetime.now())[:-4], "   ", end="")
                 print(pcol.OKGREEN, end="")
-                print(f"Read file list of available files ({FILELIST}).", end="")
+                print(f"Read file list of available files ({self.FILELIST}).", end="")
                 print(pcol.ENDC)
 
             for f in list_DWD:
@@ -306,28 +314,28 @@ class Raddo(object):
 
     @classmethod
     def local_file_list_exists(self):
-        return os.path.exists(FILELIST)
+        return os.path.exists(self.FILELIST)
 
     def create_file_list_savely(self, available_files):
         if not self.local_file_list_exists():
-            with open(FILELIST, 'a') as fl:
+            with open(self.FILELIST, 'a') as fl:
                 for f in sorted(available_files):
                     fl.write(f+"\n")
             print(str(datetime.datetime.now())[:-4], "   ", end="")
             print(pcol.OKGREEN, end="")
-            print(f"Created file list of available files ({FILELIST}).", end="")
+            print(f"Created file list of available files ({self.FILELIST}).", end="")
             print(pcol.ENDC)
 
     def update_list_of_available_files(self, new_files):
         if len(new_files) > 0:
             if self.local_file_list_exists():
-                with open(FILELIST, "a") as fl:
+                with open(self.FILELIST, "a") as fl:
                     for nf in sorted(new_files):
                         fl.write(nf+"\n")
 
                 print(str(datetime.datetime.now())[:-4], "   ", end="")
                 print(pcol.OKGREEN, end="")
-                print(f"Updated file list of available files ({FILELIST}) with:",
+                print(f"Updated file list of available files ({self.FILELIST}) with:",
                       end="")
                 print(pcol.ENDC)
                 print(new_files)
@@ -337,7 +345,7 @@ class Raddo(object):
     @property
     def list_of_available_files(self):
         if self.local_file_list_exists():
-            with open(FILELIST, 'r') as fl:
+            with open(self.FILELIST, 'r') as fl:
                 filelist = fl.read().splitlines()
             return filelist
         return []
@@ -413,7 +421,7 @@ class Raddo(object):
 
             gdal.Warp(outf, f,
                       dstSRS="EPSG:4326",
-                      srcSRS=DWD_PROJ,
+                      srcSRS=self.DWD_PROJ,
                       resampleAlg='near',
                       format='GTiff')
             res.append(outf)
@@ -434,6 +442,8 @@ def user_check():
 
 def main():
 
+    rd = Raddo()
+
     class MyParser(argparse.ArgumentParser):
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
@@ -450,10 +460,10 @@ def main():
 
     parser.add_argument('-u', '--radolan_server_url',
                         required=False,
-                        default=RAD_DIR_DWD,
+                        default=rd.RAD_DIR_DWD,
                         action='store', dest='url',
                         help=(f'Path to recent .asc RADOLAN data on '
-                              f'DWD servers.\nDefault: {RAD_DIR_DWD}'))
+                              f'DWD servers.\nDefault: {rd.RAD_DIR_DWD}'))
 
     parser.add_argument('-d', '--directory',
                         required=False,
@@ -465,25 +475,25 @@ def main():
                               f'\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
-                        default=START_DATE,
+                        default=rd.START_DATE,
                         action='store', dest='start',
                         help=(f'Start date as parsable string '
                               f'(e.g. "2018-05-20").'
-                              f'\nDefault: {START_DATE} '
+                              f'\nDefault: {rd.START_DATE} '
                               f'(current year\'s Jan 1st)'))
     parser.add_argument('-e', '--end',
                         required=False,
-                        default=END_DATE,
+                        default=rd.END_DATE,
                         action='store', dest='end',
                         help=(f'End date as parsable string '
-                              f'(e.g. "2018-05-20").'
-                              f'\nDefault: {END_DATE_STR} (yesterday)'))
+                              f'(e.g. "2020-05-20").'
+                              f'\nDefault: {rd.END_DATE_STR} (yesterday)'))
     parser.add_argument('-r', '--errors-allowed',
                         required=False,
-                        default=ERRORS_ALLOWED,
+                        default=rd.ERRORS_ALLOWED,
                         action='store', dest='errors',
                         help=(f'Errors allowed when contacting DWD Server.'
-                              f'\nDefault: {ERRORS_ALLOWED}'))
+                              f'\nDefault: {rd.ERRORS_ALLOWED}'))
     parser.add_argument('-f', '--sort-in-folders',
                         required=False,
                         default=False,
@@ -566,16 +576,15 @@ def main():
             print(f"Do you really want to store RADOLAN data in "
                   f"\"{os.getcwd()}\"?")
             user_check()
-    if args.start == START_DATE:
+    if args.start == rd.START_DATE:
         if not args.yes:
             print(f"Do you really want to download RADOLAN data from "
-                  f"{START_DATE} on?")
+                  f"{rd.START_DATE} on?")
             user_check()
 
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
 
-    rd = Raddo()
     successfull_down = rd.radolan_down(rad_dir_dwd=args.url,
                                        rad_dir=args.directory,
                                        errors_allowed=int(args.errors),
