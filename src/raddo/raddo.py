@@ -62,369 +62,370 @@ class pcol:
     UNDERLINE = '\033[4m'
 
 
-def radolan_down(rad_dir_dwd=RAD_DIR_DWD,
-                 rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
-                 rad_dir=RAD_DIR,
-                 errors_allowed=ERRORS_ALLOWED,
-                 start_date=START_DATE,
-                 end_date=END_DATE,
-                 force=False,
-                 force_down=False):
-    """
-    radolan_down()  tries to download all recent RADOLAN ascii files/archives
-    from DWD FTP to specified directory if files do not exist.
-    A list of dates possibly available (default set to 2019-01-01 until today)
-    is used to compare hypothetical available data sets with actual local
-    available ones. So file listing on the FTP side is skipped due to
-    unreliable connection. Timeout is 60 secs per retrieval attempt and
-    50 tries are made.
+class Raddo(object):
 
-    PARAMETERS:
-    -------------------------
-        rad_dir_dwd: string
-            Link to Radolan products on DWD FTP server.
-            defaults to "https://opendata.dwd.de/climate_environment/CDC/
-                         grids_germany/hourly/radolan/recent/asc/")
+    def __init__(self):
+        pass
 
-        rad_dir: string
-            local directory to be processed / already containing radolan data.
-            defaults to current working directory
+    def radolan_down(self,
+                     rad_dir_dwd=RAD_DIR_DWD,
+                     rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                     rad_dir=RAD_DIR,
+                     errors_allowed=ERRORS_ALLOWED,
+                     start_date=START_DATE,
+                     end_date=END_DATE,
+                     force=False,
+                     force_down=False):
+        """
+        radolan_down()  tries to download all recent RADOLAN ascii files/
+        archives from DWD FTP to specified directory if files do not exist.
+        A list of dates possibly available (default set to 2019-01-01 until today)
+        is used to compare hypothetical available data sets with actual local
+        available ones. So file listing on the FTP side is skipped due to
+        unreliable connection. Timeout is 60 secs per retrieval attempt and
+        50 tries are made.
 
-        start_date: string
-            parsable date string (default "2019-01")
+        PARAMETERS:
+        -------------------------
+            rad_dir_dwd: string
+                Link to Radolan products on DWD FTP server.
+                defaults to "https://opendata.dwd.de/climate_environment/CDC/
+                            grids_germany/hourly/radolan/recent/asc/")
 
-        end_date: string
-            parsable date string (defaults to yesterday)
+            rad_dir: string
+                local directory to be processed / already containing radolan data.
+                defaults to current working directory
 
-        errors_allowed: integer
-            number of tries to download one file (default: 5)
-        force:
-            Forces local file search. Omits faster check of
-            .raddo_local_files.txt".
-        force_down:
-            Forces download of all files.
+            start_date: string
+                parsable date string (default "2019-01")
 
-    """
-    # Set dates
-    if end_date == "today":
-        end_datetime = datetime.datetime.today()
-    elif type(end_date) == datetime.datetime:
-        end_datetime = end_date
-    else:
-        end_datetime = parse(end_date)
+            end_date: string
+                parsable date string (defaults to yesterday)
 
-    start_datetime = parse(start_date)
+            errors_allowed: integer
+                number of tries to download one file (default: 5)
+            force:
+                Forces local file search. Omits faster check of
+                .raddo_local_files.txt".
+            force_down:
+                Forces download of all files.
 
-    print(pcol.BOLD+pcol.OKBLUE)
-    print("-" * 80)
-    print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
-    print(f"[REMOTE] Radolan directory is set to:\n{rad_dir_dwd}\n")
-    print(f"searching for data from {start_datetime.date()} - "
-          f"{end_datetime.date()}.\n")
-    print("-" * 80)
-    print(pcol.ENDC)
-
-    fileSet = []
-    fileSet_hist = []
-    dates_exist = []
-    dates_exist_hist = []
-    files_success = []
-    os.chdir(rad_dir)
-
-    # TODO sensible??
-    search = False
-    if not local_file_list_exists():
-        search = True
-        if rad_dir == os.getcwd():
-            search = False
-    elif force is True:
-        search = True
-    else:
-        dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
-                       for f in list_of_available_files()]
-
-    # Get filenames if directory is specified
-    if search:
-        print(str(datetime.datetime.now())[:-4],
-              "   getting names of local files in directory:")
-
-        for dir_, _, files in os.walk(rad_dir):
-            print(f"                          ...{dir_[-30:]}          \r",
-                  end="")
-            for fileName in files:
-                pattern = r"RW-\d{8}\.tar\.gz$"
-                pattern_hist = r"RW-\d{6}\.tar$"
-                if re.match(pattern, fileName) is not None:
-                    fileSet.append(fileName)
-                    dates_exist.append(int(fileName[3:11]))
-                if re.match(pattern_hist, fileName) is not None:
-                    fileSet_hist.append(fileName)
-                    dates_exist_hist.append(int(fileName[3:9]))
-        create_file_list_savely(fileSet)
-        if len(fileSet_hist) > 0:
-            update_list_of_available_files(fileSet_hist)
-
-    print()
-    print(str(datetime.datetime.now())[:-4],
-          f"   {len(dates_exist)} local archive(s) found.\n")
-
-    # avoid searching for todays data:
-    delta = 1
-    if end_datetime.date() == datetime.datetime.today().date():
-        delta -= 1
-
-    # create list of possibly available DATA
-    date_list = [start_datetime + datetime.timedelta(days=x)
-                 for x in range(
-                         int((end_datetime - start_datetime).days) + delta)]
-    list_DWD = ["RW-{}.tar.gz"
-                .format(datetime.datetime.strftime(x, format="%Y%m%d"))
-                for x in date_list]
-    # list_DWD_hist = list(set([
-    #     "RW-{}.tar".format(datetime.datetime.strftime(x, format="%Y%m"))
-    #     for x in date_list]))
-
-    def hist_filename(filename):
-        return filename[:9]+".tar"
-
-    # Compare local and remote list
-    missing_files = []
-    if force_down:
-        missing_files = list_DWD.copy()
-    elif search:
-        for f in list_DWD:
-            if f not in fileSet:
-                if hist_filename(f) not in fileSet_hist:
-                    missing_files.append(f)
-    else:
-        fileSet = list_of_available_files()
-
-        if not len(fileSet) == 0:
-            print(str(datetime.datetime.now())[:-4], "   ", end="")
-            print(pcol.OKGREEN, end="")
-            print(f"Read file list of available files ({FILELIST}).", end="")
-            print(pcol.ENDC)
-
-        for f in list_DWD:
-            if not ((f in fileSet) or (hist_filename(f) in fileSet)):
-                missing_files.append(f)
-
-    if len(missing_files) > 0:
-        print(str(datetime.datetime.now())[:-4], "   {} file(s) missing.\n"
-              .format(len(missing_files)))
-        print("Missing files:\n")
-        if len(missing_files) > 10:
-            for item in missing_files[:5] + ['...'] + missing_files[-5:]:
-                print(item)
+        """
+        # Set dates
+        if end_date == "today":
+            end_datetime = datetime.datetime.today()
+        elif type(end_date) == datetime.datetime:
+            end_datetime = end_date
         else:
-            for item in missing_files:
-                print(item)
-        print()
-    else:
-        print(str(datetime.datetime.now())[:-4], "   No files missing.\n")
+            end_datetime = parse(end_date)
 
-    # try to download all missing files
-    for f in missing_files:
-        error_count = 0
-        while error_count < errors_allowed + 1:
+        start_datetime = parse(start_date)
 
-            try:
-                print(str(datetime.datetime.now())[:-4],
-                      "    [{}] trying {}{}"
-                      .format(error_count, rad_dir_dwd, f))
-                urlretrieve(rad_dir_dwd+f, f)
-                size = os.path.getsize(f)
-                if size == 0:
-                    print('file size of {}==0! Removing'.format(f))
-                    os.remove(f)
-                    continue
-                print(str(datetime.datetime.now())[:-4],
-                      "   [SUCCESS] {} downloaded.\n".format(f))
-                files_success.append(f)
-                break
-
-            except URLError as e:
-                sys.stderr.write(f"\nERROR: {e}\n")
-                sys.stderr.write("Do you have internet connection?\n")
-                sys.exit(1)
-
-            except HTTPError as err:
-                if err.code == 404:
-                    # try historical data
-                    hist_f = f[:9]+".tar"
-                    hist_y = f[3:7]
-                    # hist_m = f[7:9]
-                    try:
-                        print(str(datetime.datetime.now())[:-4],
-                              pcol.WARNING,
-                              "   [ERROR] {}. "
-                              "Now trying historical data."
-                              .format(f, rad_dir_dwd_hist+hist_y+"/"+hist_f),
-                              pcol.ENDC)
-                        if hist_f not in os.listdir():
-                            urlretrieve(rad_dir_dwd_hist+hist_y+"/"+hist_f,
-                                        hist_f)
-                            size = os.path.getsize(hist_f)
-                            if size == 0:
-                                print(
-                                    pcol.WARNING,
-                                    f'file size of {hist_f}==0! Removing.',
-                                    pcol.WARNING)
-                                os.remove(hist_f)
-                                continue
-                            print(str(datetime.datetime.now())[:-4],
-                                  pcol.OKGREEN,
-                                  f"   [SUCCESS] {hist_f} downloaded.\n",
-                                  pcol.ENDC)
-                            files_success.append(hist_f)
-                        else:
-                            print(str(datetime.datetime.now())[:-4],
-                                  pcol.OKGREEN,
-                                  f"   [SUCCESS] {hist_f} has already "
-                                  f"been downloaded.\n",
-                                  pcol.ENDC)
-                        break
-
-                    except Exception as e:
-                        print(str(datetime.datetime.now())[:-4],
-                              pcol.WARNING,
-                              f"   [ERROR] {e}\n",
-                              pcol.ENDC)
-                        error_count += 1
-
-            if error_count is errors_allowed+1:
-                print("\n", str(datetime.datetime.now())[:-4],
-                      pcol.FAIL,
-                      "   [ERROR] Exceeded requests ({}) for {}!"
-                      .format(error_count, f),
-                      pcol.ENDC)
-
-    update_list_of_available_files(files_success)
-
-    return files_success
-
-
-def local_file_list_exists():
-    return os.path.exists(FILELIST)
-
-
-def create_file_list_savely(available_files):
-    if not local_file_list_exists():
-        with open(FILELIST, 'a') as fl:
-            for f in sorted(available_files):
-                fl.write(f+"\n")
-        print(str(datetime.datetime.now())[:-4], "   ", end="")
-        print(pcol.OKGREEN, end="")
-        print(f"Created file list of available files ({FILELIST}).", end="")
+        print(pcol.BOLD+pcol.OKBLUE)
+        print("-" * 80)
+        print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
+        print(f"[REMOTE] Radolan directory is set to:\n{rad_dir_dwd}\n")
+        print(f"searching for data from {start_datetime.date()} - "
+              f"{end_datetime.date()}.\n")
+        print("-" * 80)
         print(pcol.ENDC)
 
+        fileSet = []
+        fileSet_hist = []
+        dates_exist = []
+        dates_exist_hist = []
+        files_success = []
+        os.chdir(rad_dir)
 
-def update_list_of_available_files(new_files):
-    if len(new_files) > 0:
-        if local_file_list_exists():
-            with open(FILELIST, "a") as fl:
-                for nf in sorted(new_files):
-                    fl.write(nf+"\n")
+        # TODO sensible??
+        search = False
+        if not self.local_file_list_exists():
+            search = True
+            if rad_dir == os.getcwd():
+                search = False
+        elif force is True:
+            search = True
+        else:
+            dates_exist = [int(f[3:11]) if f[-2:] == "gz" else int(f[3:9])
+                           for f in self.list_of_available_files()]
 
+        # Get filenames if directory is specified
+        if search:
+            print(str(datetime.datetime.now())[:-4],
+                  "   getting names of local files in directory:")
+
+            for dir_, _, files in os.walk(rad_dir):
+                print(f"                          ...{dir_[-30:]}          \r",
+                      end="")
+                for fileName in files:
+                    pattern = r"RW-\d{8}\.tar\.gz$"
+                    pattern_hist = r"RW-\d{6}\.tar$"
+                    if re.match(pattern, fileName) is not None:
+                        fileSet.append(fileName)
+                        dates_exist.append(int(fileName[3:11]))
+                    if re.match(pattern_hist, fileName) is not None:
+                        fileSet_hist.append(fileName)
+                        dates_exist_hist.append(int(fileName[3:9]))
+            self.create_file_list_savely(fileSet)
+            if len(fileSet_hist) > 0:
+                self.update_list_of_available_files(fileSet_hist)
+
+        print()
+        print(str(datetime.datetime.now())[:-4],
+              f"   {len(dates_exist)} local archive(s) found.\n")
+
+        # avoid searching for todays data:
+        delta = 1
+        if end_datetime.date() == datetime.datetime.today().date():
+            delta -= 1
+
+        # create list of possibly available DATA
+        date_list = [start_datetime + datetime.timedelta(days=x)
+                     for x in range(
+                            int((end_datetime - start_datetime).days) + delta)]
+        list_DWD = ["RW-{}.tar.gz"
+                    .format(datetime.datetime.strftime(x, format="%Y%m%d"))
+                    for x in date_list]
+        # list_DWD_hist = list(set([
+        #     "RW-{}.tar".format(datetime.datetime.strftime(x, format="%Y%m"))
+        #     for x in date_list]))
+
+        def hist_filename(filename):
+            return filename[:9]+".tar"
+
+        # Compare local and remote list
+        missing_files = []
+        if force_down:
+            missing_files = list_DWD.copy()
+        elif search:
+            for f in list_DWD:
+                if f not in fileSet:
+                    if hist_filename(f) not in fileSet_hist:
+                        missing_files.append(f)
+        else:
+            fileSet = self.list_of_available_files
+
+            if not len(fileSet) == 0:
+                print(str(datetime.datetime.now())[:-4], "   ", end="")
+                print(pcol.OKGREEN, end="")
+                print(f"Read file list of available files ({FILELIST}).", end="")
+                print(pcol.ENDC)
+
+            for f in list_DWD:
+                if not ((f in fileSet) or (hist_filename(f) in fileSet)):
+                    missing_files.append(f)
+
+        if len(missing_files) > 0:
+            print(str(datetime.datetime.now())[:-4], "   {} file(s) missing.\n"
+                  .format(len(missing_files)))
+            print("Missing files:\n")
+            if len(missing_files) > 10:
+                for item in missing_files[:5] + ['...'] + missing_files[-5:]:
+                    print(item)
+            else:
+                for item in missing_files:
+                    print(item)
+            print()
+        else:
+            print(str(datetime.datetime.now())[:-4], "   No files missing.\n")
+
+        # try to download all missing files
+        for f in missing_files:
+            error_count = 0
+            while error_count < errors_allowed + 1:
+
+                try:
+                    print(str(datetime.datetime.now())[:-4],
+                          "    [{}] trying {}{}"
+                          .format(error_count, rad_dir_dwd, f))
+                    urlretrieve(rad_dir_dwd+f, f)
+                    size = os.path.getsize(f)
+                    if size == 0:
+                        print('file size of {}==0! Removing'.format(f))
+                        os.remove(f)
+                        continue
+                    print(str(datetime.datetime.now())[:-4],
+                          "   [SUCCESS] {} downloaded.\n".format(f))
+                    files_success.append(f)
+                    break
+
+                except URLError as e:
+                    sys.stderr.write(f"\nERROR: {e}\n")
+                    sys.stderr.write("Do you have internet connection?\n")
+                    sys.exit(1)
+
+                except HTTPError as err:
+                    if err.code == 404:
+                        # try historical data
+                        hist_f = f[:9]+".tar"
+                        hist_y = f[3:7]
+                        # hist_m = f[7:9]
+                        try:
+                            print(str(datetime.datetime.now())[:-4],
+                                  pcol.WARNING,
+                                  "   [ERROR] {}. "
+                                  "Now trying historical data."
+                                  .format(f, rad_dir_dwd_hist+hist_y+"/"+hist_f),
+                                  pcol.ENDC)
+                            if hist_f not in os.listdir():
+                                urlretrieve(rad_dir_dwd_hist+hist_y+"/"+hist_f,
+                                            hist_f)
+                                size = os.path.getsize(hist_f)
+                                if size == 0:
+                                    print(
+                                        pcol.WARNING,
+                                        f'file size of {hist_f}==0! Removing.',
+                                        pcol.WARNING)
+                                    os.remove(hist_f)
+                                    continue
+                                print(str(datetime.datetime.now())[:-4],
+                                      pcol.OKGREEN,
+                                      f"   [SUCCESS] {hist_f} downloaded.\n",
+                                      pcol.ENDC)
+                                files_success.append(hist_f)
+                            else:
+                                print(str(datetime.datetime.now())[:-4],
+                                      pcol.OKGREEN,
+                                      f"   [SUCCESS] {hist_f} has already "
+                                      f"been downloaded.\n",
+                                      pcol.ENDC)
+                            break
+
+                        except Exception as e:
+                            print(str(datetime.datetime.now())[:-4],
+                                  pcol.WARNING,
+                                  f"   [ERROR] {e}\n",
+                                  pcol.ENDC)
+                            error_count += 1
+
+                if error_count is errors_allowed+1:
+                    print("\n", str(datetime.datetime.now())[:-4],
+                          pcol.FAIL,
+                          "   [ERROR] Exceeded requests ({}) for {}!"
+                          .format(error_count, f),
+                          pcol.ENDC)
+
+        self.update_list_of_available_files(files_success)
+
+        return files_success
+
+    @classmethod
+    def local_file_list_exists(self):
+        return os.path.exists(FILELIST)
+
+    def create_file_list_savely(self, available_files):
+        if not self.local_file_list_exists():
+            with open(FILELIST, 'a') as fl:
+                for f in sorted(available_files):
+                    fl.write(f+"\n")
             print(str(datetime.datetime.now())[:-4], "   ", end="")
             print(pcol.OKGREEN, end="")
-            print(f"Updated file list of available files ({FILELIST}) with:",
-                  end="")
+            print(f"Created file list of available files ({FILELIST}).", end="")
             print(pcol.ENDC)
-            print(new_files)
-        else:
-            create_file_list_savely(new_files)
 
+    def update_list_of_available_files(self, new_files):
+        if len(new_files) > 0:
+            if self.local_file_list_exists():
+                with open(FILELIST, "a") as fl:
+                    for nf in sorted(new_files):
+                        fl.write(nf+"\n")
 
-def list_of_available_files():
-    if local_file_list_exists():
-        with open(FILELIST, 'r') as fl:
-            filelist = fl.read().splitlines()
-        return filelist
-    return []
+                print(str(datetime.datetime.now())[:-4], "   ", end="")
+                print(pcol.OKGREEN, end="")
+                print(f"Updated file list of available files ({FILELIST}) with:",
+                      end="")
+                print(pcol.ENDC)
+                print(new_files)
+            else:
+                self.create_file_list_savely(new_files)
 
+    @property
+    def list_of_available_files(self):
+        if self.local_file_list_exists():
+            with open(FILELIST, 'r') as fl:
+                filelist = fl.read().splitlines()
+            return filelist
+        return []
 
-def try_create_directory(directory):
-    try:
-        os.makedirs(directory)
-    except FileExistsError:
-        pass
-    except OSError:
-        raise
-    return directory
+    @classmethod
+    def try_create_directory(self, directory):
+        try:
+            os.makedirs(directory)
+        except FileExistsError:
+            pass
+        except OSError:
+            raise
+        return directory
 
+    def get_asc_files(self, directories):
+        dirs = list(set(list(directories)))
+        fl = []
+        for d in dirs:
+            [fl.append(f) for f in glob.glob(os.path.join(d, "**/*asc"),
+                                             recursive=True)]
+        return fl
 
-def get_asc_files(directories):
-    dirs = list(set(list(directories)))
-    fl = []
-    for d in dirs:
-        [fl.append(f) for f in glob.glob(os.path.join(d, "**/*asc"),
-                                         recursive=True)]
-    return fl
+    def create_netcdf(self, filelist, outdir):
+        assert type(filelist) == list
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   creating NetCDF file...\n')
 
+        outf = os.path.join(outdir, "RADOLAN.nc")
 
-def create_netcdf(filelist, outdir):
-    assert type(filelist) == list
-    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                     '   creating NetCDF file...\n')
+        def time_index_from_filenames(filenames):
+            '''helper function to create a pandas DatetimeIndex
+            Filename example: 20150520_0164.tif'''
+            return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
 
-    outf = os.path.join(outdir, "RADOLAN.nc")
+        base_f_list = sorted([os.path.basename(f) for f in filelist])
+        time = xr.Variable('time', time_index_from_filenames(base_f_list))
+        da = xr.concat([xr.open_rasterio(f) for f in filelist], dim=time)
+        da = da.to_dataset(name="radolan")
+        da = da.rename_dims({'x': 'lon',
+                            'y': 'lat'})
+        da = da.rename_vars({'x': 'lon',
+                            'y': 'lat'})
+        da = da.assign_coords({"lon": da.lon,
+                               "lat": da.lat})
 
-    def time_index_from_filenames(filenames):
-        '''helper function to create a pandas DatetimeIndex
-        Filename example: 20150520_0164.tif'''
-        return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
+        # mask nodata (-1) as np.nan && compensate for 1/10 mm
+        # (although writing as integer for compressing reasons)
+        da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
+        da['radolan'].attrs['long_name'] = \
+            'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
+        da['radolan'].attrs['units'] = 'mm/h'
+        da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
+                                                 'scale_factor': 0.1,
+                                                 'zlib': True,
+                                                 '_FillValue': -9999}})
 
-    base_f_list = sorted([os.path.basename(f) for f in filelist])
-    time = xr.Variable('time', time_index_from_filenames(base_f_list))
-    da = xr.concat([xr.open_rasterio(f) for f in filelist], dim=time)
-    da = da.to_dataset(name="radolan")
-    da = da.rename_dims({'x': 'lon',
-                         'y': 'lat'})
-    da = da.rename_vars({'x': 'lon',
-                         'y': 'lat'})
-    da = da.assign_coords({"lon": da.lon,
-                           "lat": da.lat})
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   done.\n')
+        sys.stdout.flush()
+        return outf
 
-    # mask nodata (-1) as np.nan && compensate for 1/10 mm
-    # (although writing as integer for compressing reasons)
-    da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
-    da['radolan'].attrs['long_name'] = \
-        'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
-    da['radolan'].attrs['units'] = 'mm/h'
-    da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
-                                             'scale_factor': 0.1,
-                                             'zlib': True,
-                                             '_FillValue': -9999}})
+    def create_geotiffs(self, filelist, outdir):
+        assert type(filelist) == list
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   creating geotiffs..\n')
 
-    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                     '   done.\n')
-    sys.stdout.flush()
-    return outf
+        res = []
+        for i, f in enumerate(filelist):
+            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                             f'   [{i}]  {os.path.basename(f)}')
+            outf = os.path.join(outdir,
+                                os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-
-def create_geotiffs(filelist, outdir):
-    assert type(filelist) == list
-    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                     '   creating geotiffs..\n')
-
-    res = []
-    for i, f in enumerate(filelist):
-        sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                         f'   [{i}]  {os.path.basename(f)}')
-        outf = os.path.join(outdir,
-                            os.path.splitext(os.path.basename(f))[0] + ".tiff")
-
-        gdal.Warp(outf, f,
-                  dstSRS="EPSG:4326",
-                  srcSRS=DWD_PROJ,
-                  resampleAlg='near',
-                  format='GTiff')
-        res.append(outf)
-    sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                     '   done.\n')
-    sys.stdout.flush()
-    return res
+            gdal.Warp(outf, f,
+                      dstSRS="EPSG:4326",
+                      srcSRS=DWD_PROJ,
+                      resampleAlg='near',
+                      format='GTiff')
+            res.append(outf)
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   done.\n')
+        sys.stdout.flush()
+        return res
 
 
 def user_check():
@@ -579,13 +580,14 @@ def main():
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
 
-    successfull_down = radolan_down(rad_dir_dwd=args.url,
-                                    rad_dir=args.directory,
-                                    errors_allowed=int(args.errors),
-                                    start_date=args.start,
-                                    end_date=args.end,
-                                    force=args.force,
-                                    force_down=args.force_down)
+    rd = Raddo()
+    successfull_down = rd.radolan_down(rad_dir_dwd=args.url,
+                                       rad_dir=args.directory,
+                                       errors_allowed=int(args.errors),
+                                       start_date=args.start,
+                                       end_date=args.end,
+                                       force=args.force,
+                                       force_down=args.force_down)
     if len(successfull_down) > 0:
         if args.sort:
             # sort_tars.sort_tars(path=args.directory)
@@ -595,12 +597,12 @@ def main():
             untarred_dirs = untar.untar(files=new_paths)
 
         if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
-            tiff_dir = try_create_directory(os.path.join(args.directory,
-                                                         "tiff"))
-            asc_files = get_asc_files(untarred_dirs)
-            gtiff_files = create_geotiffs(asc_files, tiff_dir)
+            tiff_dir = rd.try_create_directory(os.path.join(args.directory,
+                                                            "tiff"))
+            asc_files = rd.get_asc_files(untarred_dirs)
+            gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
             if args.netcdf:
-                create_netcdf(gtiff_files, args.directory)
+                rd.create_netcdf(gtiff_files, args.directory)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
