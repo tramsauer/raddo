@@ -17,6 +17,7 @@ import argparse
 import tempfile
 import gdal
 import pandas as pd
+import geopandas as gpd
 import xarray as xr
 
 from dateutil.parser import parse
@@ -57,6 +58,7 @@ class Raddo(object):
                             "grids_germany/hourly/radolan/recent/asc/")
         self.RAD_DIR_DWD_HIST = ("https://opendata.dwd.de/climate_environment/CDC/"
                                  "grids_germany/hourly/radolan/historical/asc/")
+
         self.RAD_DIR = os.getcwd()
 
         # TODO ($USERCONFIG/.raddo/local_files) ??
@@ -66,6 +68,9 @@ class Raddo(object):
 
         self.DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
                          "+a=6370040 +b=6370040 +units=m")
+        self.geotiff_mask = None
+        self.buffer = 1400
+
 
     def radolan_down(self, *args, **kwargs):
         """
@@ -106,6 +111,10 @@ class Raddo(object):
                 .raddo_local_files.txt".
             force_down:
                 Forces download of all files.
+            mask:
+                Mask shapefile.
+            buffer:
+                Buffer in meter around shapefile mask.
 
         """
 
@@ -118,6 +127,10 @@ class Raddo(object):
         force = kwargs.get('force', False)
         force_down = kwargs.get('force_down', False)
         self.yes = kwargs.get('yes', False)
+        mask = kwargs.get('mask', None)
+        self.buffer = kwargs.get('buffer', self.buffer)
+        if mask is not None:
+            self.read_mask(mask)
 
         # Set dates
         if end_date == "today":
@@ -233,6 +246,7 @@ class Raddo(object):
         else:
             print(str(datetime.datetime.now())[:-4], "   No files missing.\n")
 
+        self.hist_files = False
         # try to download all missing files
         for f in missing_files:
             error_count = 0
@@ -253,10 +267,10 @@ class Raddo(object):
                     files_success.append(f)
                     break
 
-                except URLError as e:
-                    sys.stderr.write(f"\nERROR: {e}\n")
-                    sys.stderr.write("Do you have internet connection?\n")
-                    sys.exit(1)
+                # except URLError as e:
+                #     sys.stderr.write(f"\nERROR: {e}\n")
+                #     sys.stderr.write("Do you have internet connection?\n")
+                #     sys.exit(1)
 
                 except HTTPError as err:
                     if err.code == 404:
@@ -287,12 +301,14 @@ class Raddo(object):
                                       f"   [SUCCESS] {hist_f} downloaded.\n",
                                       pcol.ENDC)
                                 files_success.append(hist_f)
+                                self.hist_files = True
                             else:
                                 print(str(datetime.datetime.now())[:-4],
                                       pcol.OKGREEN,
                                       f"   [SUCCESS] {hist_f} has already "
                                       f"been downloaded.\n",
                                       pcol.ENDC)
+                                self.hist_files = True
                             break
 
                         except Exception as e:
@@ -419,26 +435,76 @@ class Raddo(object):
             outf = os.path.join(outdir,
                                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-            gdal.Warp(outf, f,
-                      dstSRS="EPSG:4326",
-                      srcSRS=self.DWD_PROJ,
-                      resampleAlg='near',
-                      format='GTiff')
+            # if self.geotiff_mask is not None:
+            if self.geotiff_mask is not None:
+                gdal.Warp(outf, f,
+                          dstSRS="EPSG:4326",
+                          srcSRS=self.DWD_PROJ,
+                          # resampleAlg='bilinear',
+                          # resampleAlg='cubic',
+                          # outputBounds=self.mask_total_bounds,  #  --- output bounds as (minX, minY, maxX, maxY) in target SRS
+                          # outputBoundsSRS --- SRS in which output bounds are expressed, in the case they are not expressed in dstSRS
+                          cutlineDSName=self.geotiff_mask,
+                          cropToCutline=True,
+                          format='GTiff')
+            else:
+                gdal.Warp(outf, f,
+                          dstSRS="EPSG:4326",
+                          srcSRS=self.DWD_PROJ,
+                          # resampleAlg='near',
+                          format='GTiff')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
         sys.stdout.flush()
         return res
 
+    def read_mask(self, maskfile):
+        mf = gpd.read_file(maskfile)
+        mf = mf.to_crs({'init': 'epsg:32632'})
+        gtypes = list(set(mf.geometry.geom_type))
+        assert len(gtypes) == 1, \
+            "Multiple geometry types in maskfile ({maskfile})!"
+
+        # create centroids if multi poligons
+        # if mf.geom_type == 'Polygon' and len(mf) > 1:
+            # mf = mf.centroids()
+
+        with tempfile.NamedTemporaryFile(suffix=".shp") as tmpf:
+            self.geotiff_mask = tmpf.name
+
+            # self.mask_bounds = gpd.GeoDataFrame(crs=mf.crs,
+                                                # geometry=mf.unary_union.buffer(self.buffer))
+
+        # unary_union?
+        if gtypes == "Polygon":
+            mf['diss'] = 1
+            mf = mf.dissolve(by="diss")
+        if gtypes == "Point" and len(mf) == 1 and self.buffer < 1400:
+            if user_check("This buffer might not cath any RADOLAN cells. "
+                          "Do you want to increase the size to 1400m?"):
+                self.buffer = 1400
+
+        buff = mf.buffer(self.buffer)
+        self.mask_bounds = buff.to_crs({'init': 'epsg:4326'})
+
+        mf = mf.to_crs({'init': 'epsg:4326'})
+        self.mask_bounds.to_file(self.geotiff_mask)
+
+        self.mask_total_bounds = mf.total_bounds
+        self.mask_gdf = mf
+        self.mask_type = mf.geom_type
+
 
 def user_check(question):
     sys.stdout.write(question+" ")
     do = input("[y/N] ")
     if do in VALID_Y:
-        pass
+        return True
     elif do in VALID_N:
-        sys.stderr.write(f"User Interruption.\n")
-        sys.exit()
+        return False
+        # sys.stderr.write(f"User Interruption.\n")
+        # sys.exit()
 
 
 def main():
@@ -517,6 +583,17 @@ def main():
                         action='store_true', dest='netcdf',
                         help=(f'Create a NetCDF from GeoTiffs?'))
 
+    parser.add_argument('-m', '--mask',
+                        required=False,
+                        default=False,
+                        action='store', dest='mask',
+                        help=(f'Use mask when creating NetCDF.'))
+    parser.add_argument('-b', '--buffer',
+                        required=False,
+                        default=1400,
+                        action='store', dest='buffer',
+                        help=(f'Buffer in meter around mask shapefile'
+                              ' (Default 1400m).'))
     parser.add_argument('-C', '--complete',
                         required=False,
                         default=False,
@@ -574,15 +651,17 @@ def main():
     # if no -d flag:
     if args.directory == os.getcwd():
         if not args.yes:
-            print(f"Do you really want to store RADOLAN data in "
-                  f"\"{os.getcwd()}\"?")
-            user_check()
+            if not user_check(f"Do you really want to store RADOLAN data in "
+                              f"\"{os.getcwd()}\"?"):
+                sys.stderr.write(f"User Interruption.\n")
+                sys.exit()
+
     if args.start == rd.START_DATE:
         if not args.yes:
-            print(f"Do you really want to download RADOLAN data from "
-                  f"{rd.START_DATE} on?")
-            user_check()
-
+            if not user_check(f"Do you really want to download RADOLAN data from "
+                              f"{rd.START_DATE} on?"):
+                sys.stderr.write(f"User Interruption.\n")
+                sys.exit()
     assert args.errors < 21, \
         "Error value too high. Please be respectful with the data provider."
 
@@ -593,15 +672,19 @@ def main():
                                        end_date=args.end,
                                        force=args.force,
                                        force_down=args.force_down,
-                                       yes=args.yes)
+                                       yes=args.yes,
+                                       buffer=args.buffer)
     if len(successfull_down) > 0:
         if args.sort:
             new_paths = sort_tars.sort_tars(files=successfull_down)
         if args.extract:
-            untarred_dirs = untar.untar(files=new_paths)
+            untarred_dirs = untar.untar(files=new_paths, hist=rd.hist_files)
 
         if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
             asc_files = rd.get_asc_files(untarred_dirs)
+
+            if args.mask:
+                rd.read_mask(args.mask)
 
             # create tiff directory
             if args.geotiff:
