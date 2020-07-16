@@ -155,6 +155,11 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 
  ```
 
+## Warnings
+
+- currently, if a shapefile mask is applied, sub optimal *nearest neighbour resampling* is applied (as other methods were not functional in gdal python bindings..(?)).
+- if geotiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
+- if multiple polygons are used as mask, they are dissolved & buffered.
 
 ## Contributing
 
@@ -174,7 +179,7 @@ See [Changelog](CHANGELOG.rst) document.
 - [X] add historical
 - [X] integrate GeoTiff generation (reprojection)
 - [X] integrate aggregation to NetCDF files
-- [ ] add tests!
+- [X] add tests!
 - [ ] add docs
 - [ ] add DOI
 - [ ] pip install?
