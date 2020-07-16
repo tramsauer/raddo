@@ -128,8 +128,7 @@ class Raddo(object):
             end_datetime = parse(end_date)
 
         start_datetime = parse(start_date)
-        print((end_datetime - start_datetime).days)
-        assert (end_datetime - start_datetime).days > 0
+        assert (end_datetime - start_datetime).days > -1
 
         print(pcol.BOLD+pcol.OKBLUE)
         print("-" * 80)
