@@ -41,7 +41,7 @@ Download RADOLAN data from *{current-year}-01-01* till *today* to current direct
 
 ``` sh
 usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
-             [-x] [-g] [-n] [-C] [-y] [-F] [-D] [-v]
+             [-x] [-g] [-n] [-m MASK] [-b BUFFER] [-C] [-y] [-F] [-D] [-v]
 
 raddo - utility to download RADOLAN data from DWD servers and prepare for
 simple usage.
@@ -55,13 +55,13 @@ optional arguments:
   -d DIRECTORY, --directory DIRECTORY
                         Path to local directory where RADOLAN shouldbe (and
                         may already be) saved. Checks for existing files only
-                        if this flag is set. Default: /tmp/raddo_test (current
+                        if this flag is set. Default: /home/tom (current
                         directory)
   -s START, --start START
                         Start date as parsable string (e.g. "2018-05-20").
                         Default: 2020-01-01 (current year\'s Jan 1st)
-  -e END, --end END     End date as parsable string (e.g. "2018-05-20").
-                        Default: 2020-07-09 (yesterday)
+  -e END, --end END     End date as parsable string (e.g. "2020-05-20").
+                        Default: 2020-07-16 (yesterday)
   -r ERRORS, --errors-allowed ERRORS
                         Errors allowed when contacting DWD Server. Default: 5
   -f, --sort-in-folders
@@ -70,6 +70,9 @@ optional arguments:
   -g, --geotiff         Set if GeoTiffs in EPSG:4326 should be created for
                         newly downloaded files.
   -n, --netcdf          Create a NetCDF from GeoTiffs?
+  -m MASK, --mask MASK  Use mask when creating NetCDF.
+  -b BUFFER, --buffer BUFFER
+                        Buffer in meter around mask shapefile (Default 1400m).
   -C, --complete        Run all subcommands. Same as using flags -fxgn.
   -y, --yes             Skip user input. Just accept to download to current
                         directory if not specified otherwise.
@@ -81,6 +84,12 @@ optional arguments:
 ```
 ### Example
 
+Force local available file search, download and processing (sorting, extracting, geotiff & netCDF creation) of `RADOLAN` data for point in shapefile `test_pt.shp` with:
+``` sh
+raddo -d "/folder1" -s "2020-07-15" -CFD -m "test_pt.shp"
+```
+
+More visual:
 
 ![example image should load here...](raddo.gif "Terminal prompt")
 
@@ -133,6 +142,11 @@ rd.radolan_down(rad_dir_dwd = ...,  )
             defaults to "https://opendata.dwd.de/climate_environment/CDC/
                          grids_germany/hourly/radolan/recent/asc/")
 
+        rad_dir_dwd_hist: string
+            Link to Radolan products on DWD FTP server.
+            defaults to "https://opendata.dwd.de/climate_environment/CDC/"
+                        "grids_germany/hourly/radolan/historical/asc/"
+
         rad_dir: string
             local directory to be processed / already containing radolan data.
             defaults to current working directory
@@ -152,6 +166,12 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 
         force_down:
             Forces download of all files.
+
+        mask:
+            Mask shapefile.
+
+        buffer:
+            Buffer in meter around shapefile mask.
 
  ```
 
