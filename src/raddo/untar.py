@@ -41,10 +41,12 @@ def untar(**kwargs):
             print("untarring ", filename, end=" ")
             print("to {}".format(f_base))
             tar.extractall(path=f_base)
+            tar.close()
+            del tar
             return f_base
         else:
             print(str(datetime.now())[:-4] + f"   {f_base} already unpacked.")
-
+            return f_base
 
     count_to_tar = 0
     if not files:
@@ -72,25 +74,28 @@ def untar(**kwargs):
                 untarred_file = save_untar(filename)
                 if untarred_file is not None:
                     ret.append(os.path.join(root, untarred_file))
+                    del untarred_file
                     count_to_tar += 1
 
             if re.match(r".+\.tar$", filename) is not None:
                 untarred_file = save_untar(filename)
                 if untarred_file is not None:
                     ret.append(os.path.join(root, untarred_file))
+                    del untarred_file
                     count_to_tar += 1
-                if len(ret) == 0:
+                # if len(ret) == 0:
                     for gz_root, gz_dirs, gz_files in os.walk(f_base):
                         for gz_filename in gz_files:
                             os.chdir(os.path.join(root, gz_root))
                             f_base = os.path.splitext(gz_filename)[0]
                             if re.match(r".+\.tar.gz$",
                                         gz_filename) is not None:
-                                untarred_file = save_untar(filename)
+                                untarred_file = save_untar(gz_filename)
                                 if untarred_file is not None:
                                     ret.append(
                                         os.path.join(root,
                                                      untarred_file))
+                                    del untarred_file
                                     count_to_tar += 1
             os.chdir(curdir)
         print(str(datetime.now())[:-4] + "   done.")

@@ -54,7 +54,7 @@ def sort_tars(**kwargs):
             except Exception:
                 print('ERROR.')
 
-    print("\n" + str(datetime.now())[:-4], 'Sorting finished.')
+    print(str(datetime.now())[:-4], '  Sorting finished.')
     return new_paths
 
 
