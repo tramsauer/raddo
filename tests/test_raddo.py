@@ -37,6 +37,27 @@ def test_local_file_list():
     rd = Raddo()
     print(rd.local_file_list_exists())
 
+def test_mask_pts():
+    rd = Raddo()
+    maskfile = os.path.join(os.path.dirname(__file__),
+                            "shps/test_pts.shp")
+    print(maskfile)
+    rd.read_mask(maskfile)
+
+def test_mask_poly():
+    rd = Raddo()
+    maskfile = os.path.join(os.path.dirname(__file__),
+                            "shps/test_poly.shp")
+    print(maskfile)
+    rd.read_mask(maskfile)
+
+def test_mask_poly_multi():
+    rd = Raddo()
+    maskfile = os.path.join(os.path.dirname(__file__),
+                            "shps/test_poly_multi.shp")
+    print(maskfile)
+    rd.read_mask(maskfile)
+
 
 def test_trycreatedir():
     with tempfile.TemporaryDirectory() as tdir:
@@ -49,10 +70,12 @@ def test_raddo_complete_download():
         "%Y-%m-%d")
     END_DATE = datetime.datetime.today() - datetime.timedelta(2)  # Yesterday
     with tempfile.TemporaryDirectory() as tmpdirname:
-        rd = Raddo()
+        os.chdir(tmpdirname)
         RAD_DIR = tmpdirname
+        rd = Raddo()
         tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
                                                         "tiff"))
+
         successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
                                               rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
                                               rad_dir=RAD_DIR,
@@ -69,3 +92,176 @@ def test_raddo_complete_download():
         asc_files = rd.get_asc_files(untarred_dirs)
         gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
         rd.create_netcdf(gtiff_files, RAD_DIR)
+    tempfile.TemporaryDirectory().cleanup()
+
+
+def test_raddo_complete_download_old():
+    START_DATE = datetime.datetime.strftime(
+        datetime.datetime.today() - datetime.timedelta(400),
+        "%Y-%m-%d")
+    END_DATE = datetime.datetime.today() - datetime.timedelta(399)  # Yesterday
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        os.chdir(tmpdirname)
+        RAD_DIR = tmpdirname
+        rd = Raddo()
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+
+        successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                                              rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                                              rad_dir=RAD_DIR,
+                                              errors_allowed=ERRORS_ALLOWED,
+                                              start_date=START_DATE,
+                                              end_date=END_DATE,
+                                              force=True,
+                                              force_down=True)
+
+        new_paths = sort_tars.sort_tars(files=successfull_down)
+        untarred_dirs = untar.untar(files=new_paths)
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                     "tiff"))
+        print(untarred_dirs)
+        asc_files = rd.get_asc_files(untarred_dirs)
+        print(asc_files)
+        gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        print(gtiff_files)
+        rd.create_netcdf(gtiff_files, RAD_DIR)
+    tempfile.TemporaryDirectory().cleanup()
+
+def test_raddo_complete_download_with_mask_pts():
+    START_DATE = datetime.datetime.strftime(
+        datetime.datetime.today() - datetime.timedelta(4),
+        "%Y-%m-%d")
+    END_DATE = datetime.datetime.today() - datetime.timedelta(2)  # Yesterday
+
+    tempfile.TemporaryDirectory().cleanup()
+    with tempfile.TemporaryDirectory(suffix="pts") as tmpdirname:
+        print(tmpdirname)
+        os.chdir(tmpdirname)
+        rd = Raddo()
+        RAD_DIR = tmpdirname
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+
+        maskfile = os.path.join(os.path.dirname(__file__),
+                                "shps/test_pts.shp")
+        print(maskfile)
+        rd.read_mask(maskfile)
+        successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                                              rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                                              rad_dir=RAD_DIR,
+                                              errors_allowed=ERRORS_ALLOWED,
+                                              start_date=START_DATE,
+                                              end_date=END_DATE,
+                                              force=True,
+                                              force_down=True)
+
+        new_paths = sort_tars.sort_tars(files=successfull_down)
+        untarred_dirs = untar.untar(files=new_paths)
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                     "tiff"))
+        asc_files = rd.get_asc_files(untarred_dirs)
+        gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        rd.create_netcdf(gtiff_files, RAD_DIR)
+
+
+def test_raddo_complete_download_with_mask_poly():
+    START_DATE = datetime.datetime.strftime(
+        datetime.datetime.today() - datetime.timedelta(4),
+        "%Y-%m-%d")
+    END_DATE = datetime.datetime.today() - datetime.timedelta(2)  # Yesterday
+
+    tempfile.TemporaryDirectory().cleanup()
+    with tempfile.TemporaryDirectory(suffix="pts") as tmpdirname:
+        print(tmpdirname)
+        os.chdir(tmpdirname)
+        rd = Raddo()
+        RAD_DIR = tmpdirname
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+
+        maskfile = os.path.join(os.path.dirname(__file__),
+                                "shps/test_poly.shp")
+        print(maskfile)
+        rd.read_mask(maskfile)
+        successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                                              rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                                              rad_dir=RAD_DIR,
+                                              errors_allowed=ERRORS_ALLOWED,
+                                              start_date=START_DATE,
+                                              end_date=END_DATE,
+                                              force=True,
+                                              force_down=True)
+
+        new_paths = sort_tars.sort_tars(files=successfull_down)
+        untarred_dirs = untar.untar(files=new_paths)
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                     "tiff"))
+        asc_files = rd.get_asc_files(untarred_dirs)
+        gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        rd.create_netcdf(gtiff_files, RAD_DIR)
+
+def test_raddo_complete_download_with_mask_poly_multi():
+    START_DATE = datetime.datetime.strftime(
+        datetime.datetime.today() - datetime.timedelta(4),
+        "%Y-%m-%d")
+    END_DATE = datetime.datetime.today() - datetime.timedelta(2)  # Yesterday
+
+    tempfile.TemporaryDirectory().cleanup()
+    with tempfile.TemporaryDirectory(suffix="pts") as tmpdirname:
+        print(tmpdirname)
+        os.chdir(tmpdirname)
+        rd = Raddo()
+        RAD_DIR = tmpdirname
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+
+        successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                                              rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                                              rad_dir=RAD_DIR,
+                                              errors_allowed=ERRORS_ALLOWED,
+                                              start_date=START_DATE,
+                                              end_date=END_DATE,
+                                              force=True,
+                                              force_down=True)
+
+
+        ## POLY MULT
+        maskfile = os.path.join(os.path.dirname(__file__),
+                                "shps/test_poly_multi.shp")
+        print(maskfile)
+        rd.read_mask(maskfile)
+        new_paths = sort_tars.sort_tars(files=successfull_down)
+        untarred_dirs = untar.untar(files=new_paths)
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                     "tiff"))
+        asc_files = rd.get_asc_files(untarred_dirs)
+        gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        rd.create_netcdf(gtiff_files, RAD_DIR)
+
+
+        # ## POLY
+        # maskfile = os.path.join(os.path.dirname(__file__),
+        #                         "shps/test_poly.shp")
+        # print(maskfile)
+        # rd.read_mask(maskfile)
+        # new_paths = sort_tars.sort_tars(files=successfull_down)
+        # untarred_dirs = untar.untar(files=new_paths)
+        # tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+        #                                              "tiff"))
+        # asc_files = rd.get_asc_files(untarred_dirs)
+        # gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        # rd.create_netcdf(gtiff_files, RAD_DIR)
+
+        # ## PTS
+        # maskfile = os.path.join(os.path.dirname(__file__),
+        #                         "shps/test_pts.shp")
+        # print(maskfile)
+        # rd.read_mask(maskfile)
+        # new_paths = sort_tars.sort_tars(files=successfull_down)
+        # untarred_dirs = untar.untar(files=new_paths)
+        # tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+        #                                              "tiff"))
+        # asc_files = rd.get_asc_files(untarred_dirs)
+        # gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        # rd.create_netcdf(gtiff_files, RAD_DIR)
