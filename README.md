@@ -34,6 +34,10 @@ python setup.py develop
 ```
 if you want to work on the code.
 
+### GDAL
+
+`GDAL` is a requirement of `raddo`. However, installation of this dependency can be a problem. If errors arise, gdal binaries might be missing. When using conda, `conda install -c conda-forge gdal` might work. On ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
+
 ## Usage
 
 Download RADOLAN data from *{current-year}-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
@@ -180,6 +184,7 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 - currently, if a shapefile mask is applied, sub optimal *nearest neighbour resampling* is applied (as other methods were not functional in gdal python bindings..(?)).
 - if geotiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
 - if multiple polygons are used as mask, they are dissolved & buffered.
+- does not recreate nor warn if geotiffs are already available.
 
 ## Contributing
 
