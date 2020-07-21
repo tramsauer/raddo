@@ -17,8 +17,10 @@ import argparse
 import tempfile
 import gdal
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 import xarray as xr
+import netCDF4
 
 from dateutil.parser import parse
 from urllib.request import urlretrieve
@@ -255,7 +257,7 @@ class Raddo(object):
                 try:
                     print(str(datetime.datetime.now())[:-4],
                           "    [{}] trying {}{}"
-                          .format(error_count, rad_dir_dwd, f))
+                          .format(error_count, rad_dir_dwd[-22:], f))
                     urlretrieve(rad_dir_dwd+f, f)
                     size = os.path.getsize(f)
                     if size == 0:
@@ -283,7 +285,7 @@ class Raddo(object):
                                   pcol.WARNING,
                                   "   [ERROR] {}. "
                                   "Now trying historical data."
-                                  .format(f, rad_dir_dwd_hist+hist_y+"/"+hist_f),
+                                  .format(f, rad_dir_dwd_hist[-20:]+hist_y+"/"+hist_f),
                                   pcol.ENDC)
                             if hist_f not in os.listdir():
                                 urlretrieve(rad_dir_dwd_hist+hist_y+"/"+hist_f,
@@ -384,43 +386,110 @@ class Raddo(object):
                                              recursive=True)]
         return fl
 
+    def _time_index_from_filenames(self, filenames):
+        '''helper function to create a pandas DatetimeIndex
+        Filename example: 20150520_0164.tif'''
+        return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
+
     def create_netcdf(self, filelist, outdir):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating NetCDF file...\n')
 
+        filelist = sorted(filelist)
         outf = os.path.join(outdir, "RADOLAN.nc")
 
-        def time_index_from_filenames(filenames):
-            '''helper function to create a pandas DatetimeIndex
-            Filename example: 20150520_0164.tif'''
-            return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
+        # Initialize netCDF
+        ds = gdal.Open(filelist[0])
+        a = ds.ReadAsArray()
+        b = ds.GetGeoTransform()
+        nlat, nlon = np.shape(a)
+        lon = np.arange(nlon) * b[1] + b[0]
+        lat = np.arange(nlat) * b[5] + b[3]
 
-        base_f_list = sorted([os.path.basename(f) for f in filelist])
-        time = xr.Variable('time', time_index_from_filenames(base_f_list))
-        da = xr.concat([xr.open_rasterio(f) for f in filelist], dim=time)
-        da = da.to_dataset(name="radolan")
-        da = da.rename_dims({'x': 'lon',
-                            'y': 'lat'})
-        da = da.rename_vars({'x': 'lon',
-                            'y': 'lat'})
-        da = da.assign_coords({"lon": da.lon,
-                               "lat": da.lat})
+        nco = netCDF4.Dataset(outf, 'w', clobber=True)
 
-        # mask nodata (-1) as np.nan && compensate for 1/10 mm
-        # (although writing as integer for compressing reasons)
-        da['radolan'] = da.radolan.where(da.radolan >= 0) / 10
-        da['radolan'].attrs['long_name'] = \
-            'Precipitation data from RADOLAN RW Weather Radar Data (DWD)'
-        da['radolan'].attrs['units'] = 'mm/h'
-        da.to_netcdf(outf, encoding={'radolan': {'dtype': 'int16',
-                                                 'scale_factor': 0.1,
-                                                 'zlib': True,
-                                                 '_FillValue': -9999}})
+        # create dimensions, variables and attributes:
+        nco.createDimension('lon', nlon)
+        nco.createDimension('lat', nlat)
+        nco.createDimension('time', None)
+
+        lono = nco.createVariable('lon', 'f4', ('lon'))
+        lono.units = 'degrees_east'
+        lono.standard_name = 'longitude'
+        lato = nco.createVariable('lat', 'f4', ('lat'))
+        lato.units = 'degrees_north'
+        lato.standard_name = 'latitude'
+
+        basedate = datetime.datetime(2000, 1, 1, 0, 0, 0)
+        timeo = nco.createVariable('time', 'f4', ('time'))
+        timeo.units = 'hours since 2000-01-01 00:00:00'
+        timeo.standard_name = 'time'
+
+        # create container variable for CRS: lon/lat WGS84 datum
+        crso = nco.createVariable('crs', 'i4')
+        crso.long_name = 'Lon/Lat Coords in WGS84'
+        crso.grid_mapping_name = 'latitude_longitude'
+        crso.longitude_of_prime_meridian = 0.0
+        crso.semi_major_axis = 6378137.0
+        crso.inverse_flattening = 298.257223563
+
+        # create short integer variable for temperature data, with chunking
+        chunk_lon = 16
+        chunk_lat = 16
+        chunk_time = 24
+        prco = nco.createVariable('prc', 'i4',  ('time', 'lat', 'lon'),
+                                  zlib=True,
+                                  # chunksizes=[
+                                      # chunk_time, chunk_lat, chunk_lon],
+                                  fill_value=-9999)
+        prco.units = 'mm/h'
+        prco.scale_factor = 0.1
+        prco.add_offset = 0.00
+        prco.long_name = \
+            'precipitation data from RADOLAN RW Weather Radar Data (DWD)'
+        prco.standard_name = \
+            'precipitation'
+        prco.grid_mapping = 'crs'
+        prco.set_auto_maskandscale(False)
+
+        nco.Conventions = 'CF-1.6'
+
+        # write lon,lat
+        lono[:] = lon
+        lato[:] = lat
+
+        itime = 0
+        for i, fi in enumerate(filelist):
+            f = os.path.basename(fi)
+            year = int(f[3:7])
+            mon = int(f[7:9])
+            day = int(f[9:11])
+            hour = int(f[12:14])
+            minu = int(f[14:16])
+            date = datetime.datetime(year, mon, day,
+                                     hour, minu, 0)
+
+            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                             f'   [{i}]  {f}')
+
+            dtime = (date-basedate).total_seconds()/3600.
+            timeo[itime] = dtime
+
+            prc = gdal.Open(fi)
+            a = prc.ReadAsArray() / 10  # get data
+            a[a < 0] = -9999
+            prco[itime, :, :] = a  # 1/10 mm in RADOLAN data
+            itime = itime + 1
+
+        nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
         sys.stdout.flush()
+        # mask nodata (-1) as np.nan && compensate for 1/10 mm
+        # (although writing as integer for compressing reasons)
+
         return outf
 
     def create_geotiffs(self, filelist, outdir):
