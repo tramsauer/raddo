@@ -16,16 +16,13 @@ import datetime
 import argparse
 import tempfile
 import gdal
-import pandas as pd
 import numpy as np
 import geopandas as gpd
-import xarray as xr
 import netCDF4
 
 from dateutil.parser import parse
 from urllib.request import urlretrieve
 from urllib.error import HTTPError
-from urllib.error import URLError
 
 from raddo import sort_tars
 from raddo import untar
@@ -385,11 +382,6 @@ class Raddo(object):
             [fl.append(f) for f in glob.glob(os.path.join(d, "**/*asc"),
                                              recursive=True)]
         return fl
-
-    def _time_index_from_filenames(self, filenames):
-        '''helper function to create a pandas DatetimeIndex
-        Filename example: 20150520_0164.tif'''
-        return pd.DatetimeIndex([pd.Timestamp(f[3:16]) for f in filenames])
 
     def create_netcdf(self, filelist, outdir):
         assert type(filelist) == list
