@@ -5,12 +5,17 @@
 
 *raddo* is a no-frills software that prepares RADOLAN weather radar precipitation data for simple usage.
 
-*raddo* downloads RADOLAN weather radar ascii data (*tar.gz). Downloaded files are sorted in folders based on year and month and may also be untarred.
+*raddo* downloads and processes RADOLAN weather radar ASCII data.
+Downloaded files are sorted in folders based on year and month and may also be decompressed.
+As next step *raddo* creates GeoTiffs in generic WGS84 lat/lon coordinates and/or a single NetCDF file upon user request.
+In case the data is only needed for a smaller region, masking via a shapefile is also possible.
+For all possibilities on data retrieval and processing see the *usage section*.
+
+*raddo* tries to download all recent RADOLAN ASCII files / archives from the DWD FTP server to the specified directory if files do not exist already. A list of dates possibly available (default \<current year\>-01-01 until today) is used to compare hypothetical available data sets with actual local available ones. So file listing on the FTP side is skipped due to (formerly) unreliable connection.
 
 RADOLAN data from the German Weather Service (Deutscher Wetterdienst, DWD) is copyrighted! Please find the copyright text [here](https://opendata.dwd.de/climate_environment/CDC/Terms_of_use.pdf).
 The freely accessible data may be re-used without any restrictions provided that the source reference is indicated, as laid down in the GeoNutzV ordinance.
 
-*raddo* tries to download all recent RADOLAN ascii files / archives from DWD FTP to the specified directory if files do not exist already. A list of dates possibly available (default 2019-01-01 until today) is used to compare hypothetical available data sets with actual local available ones. So file listing on the FTP side is skipped due to (formerly) unreliable connection.
 The RADOLAN precipitation data files are *updated daily* by DWD.
 
 <img align="right" src="dwd_logo.png" width="200">
@@ -20,6 +25,7 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 
 ## Installation
 
+The software is developed and tested for usage in Linux.
 Clone this repository, change into new directory and run:
 
 ``` sh
@@ -36,7 +42,7 @@ if you want to work on the code.
 
 ### GDAL
 
-`GDAL` is a requirement of `raddo`. However, installation of this dependency can be a problem. If errors arise, gdal binaries might be missing. When using conda, `conda install -c conda-forge gdal` might work. On ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
+`GDAL` is a requirement of `raddo`. However, installation of this dependency can be a problem. If errors arise, `GDAL` binaries might be missing. When using *conda*, `conda install -c conda-forge gdal` might work. On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
 
 ## Usage
 
@@ -181,23 +187,23 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 
 ## Warnings
 
-- currently, if a shapefile mask is applied, sub optimal *nearest neighbour resampling* is applied (as other methods were not functional in gdal python bindings..(?)).
-- if geotiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
+- currently, if a shapefile mask is used, sub-optimal *nearest neighbour resampling* is applied in the GeoTiff conversion (as other methods were not functional in gdal python bindings..(?)).
+- if GeoTiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
 - if multiple polygons are used as mask, they are dissolved & buffered.
-- does not recreate nor warn if geotiffs are already available.
+- `raddo` does not recreate nor warn if GeoTiffs are already available.
 
 ## Contributing
 
-See [CONTRIBUTIONS](CONTRIBUTIONS.md) document.
+See [CONTRIBUTING](CONTRIBUTING.md) document.
 
 ## License
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 
-Please find the license aggreement in [LICENSE.txt](LICENSE.txt)
+Please find the license agreement in [LICENSE.txt](LICENSE.txt)
 
 ## Changes
 
-See [Changelog](CHANGELOG.rst) document.
+See [Changelog](CHANGELOG.md) document.
 
 ## Further Development
 

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 [Unreleased changes]
 
+
+## Version [0.4.1] - 2020-07-22
+
+#### Changed
+- README update
+
+#### Added
+
+#### Removed
+
+
+
 ## Version [0.4.0] - 2020-07-22
 
 #### Changed
@@ -93,7 +105,8 @@ All notable changes to this project will be documented in this file.
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).*
 
 
-[Unreleased changes]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.0...dev
+[Unreleased changes]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...dev
+[0.4.1]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.0...0.4.1
 [0.4.0]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.2...0.4.0
 [0.3.2]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.1...0.3.2
 [0.3.1]: https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.0...0.3.1
