@@ -2,25 +2,38 @@
 raddo
 =====
 
+|license badge|
+
 This is the documentation of **raddo**.
+*raddo* is a no-frills software that prepares RADOLAN weather radar
+precipitation data for simple usage.
 
-.. note::
+*raddo* downloads and processes RADOLAN weather radar ASCII data.
+Downloaded files are sorted in folders based on year and month and may
+also be decompressed. As next step *raddo* creates GeoTiffs in generic
+WGS84 lat/lon coordinates and/or a single NetCDF file upon user request.
+In case the data is only needed for a smaller region, masking via a
+shapefile is also possible. For all possibilities on data retrieval and
+processing see the *usage section*.
 
-    This is the main page of your project's `Sphinx`_ documentation.
-    It is formatted in `reStructuredText`_. Add additional pages
-    by creating rst-files in ``docs`` and adding them to the `toctree`_ below.
-    Use then `references`_ in order to link them from this page, e.g.
-    :ref:`authors` and :ref:`changes`.
+*raddo* tries to download all recent RADOLAN ASCII files / archives from
+the DWD FTP server to the specified directory if files do not exist
+already. A list of dates possibly available (default <current
+year>-01-01 until today) is used to compare hypothetical available data
+sets with actual local available ones. So file listing on the FTP side
+is skipped due to (formerly) unreliable connection.
 
-    It is also possible to refer to the documentation of other Python packages
-    with the `Python domain syntax`_. By default you can reference the
-    documentation of `Sphinx`_, `Python`_, `NumPy`_, `SciPy`_, `matplotlib`_,
-    `Pandas`_, `Scikit-Learn`_. You can add more by extending the
-    ``intersphinx_mapping`` in your Sphinx's ``conf.py``.
+RADOLAN data from the German Weather Service (Deutscher Wetterdienst,
+DWD) is copyrighted! Please find the copyright text
+`here <https://opendata.dwd.de/climate_environment/CDC/Terms_of_use.pdf>`__.
+The freely accessible data may be re-used without any restrictions
+provided that the source reference is indicated, as laid down in the
+GeoNutzV ordinance.
 
-    The pretty useful extension `autodoc`_ is activated by default and lets
-    you include documentation from docstrings. Docstrings can be written in
-    `Google style`_ (recommended!), `NumPy style`_ and `classical style`_.
+The RADOLAN precipitation data files are *updated daily* by DWD.
+
+The data can be found at
+`opendata.dwd.de <https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/>`__.
 
 
 Contents
@@ -29,31 +42,47 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   Installation <install>
+   Usage <usage>
    License <license>
    Authors <authors>
    Changelog <changelog>
    Module Reference <api/modules>
 
 
+Further Development
+--------------------
+
+- [X] add historical
+- [X] integrate GeoTiff generation (reprojection)
+- [X] integrate aggregation to NetCDF files
+- [X] add tests!
+- [ ] add docs
+- [ ] add DOI
+- [ ] pip install?
+- [ ] add pypi install
+- [ ] add conda install
+- [X] gif for cli
+
+
+See also
+--------
+
+-  `wradlib <https://github.com/wradlib/wradlib>`__: > An Open Source
+   Library for Weather Radar Data Processing
+
+-  `radproc <https://github.com/jkreklow/radproc>`__: > A GIS-compatible
+   Python-Package for automated RADOLAN Composite Processing and
+   Analysis
+
+
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
 
-.. _toctree: http://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
-.. _reStructuredText: http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _references: http://www.sphinx-doc.org/en/stable/markup/inline.html
-.. _Python domain syntax: http://sphinx-doc.org/domains.html#the-python-domain
-.. _Sphinx: http://www.sphinx-doc.org/
-.. _Python: http://docs.python.org/
-.. _Numpy: http://docs.scipy.org/doc/numpy
-.. _SciPy: http://docs.scipy.org/doc/scipy/reference/
-.. _matplotlib: https://matplotlib.org/contents.html#
-.. _Pandas: http://pandas.pydata.org/pandas-docs/stable
-.. _Scikit-Learn: http://scikit-learn.org/stable
-.. _autodoc: http://www.sphinx-doc.org/en/stable/ext/autodoc.html
-.. _Google style: https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings
-.. _NumPy style: https://numpydoc.readthedocs.io/en/latest/format.html
-.. _classical style: http://www.sphinx-doc.org/en/stable/domains.html#info-field-lists
+.. |license badge| image:: https://img.shields.io/badge/license-GNU_GPLv3-blue
+   :target: :ref:`license`

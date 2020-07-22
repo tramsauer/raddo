@@ -70,7 +70,6 @@ class Raddo(object):
         self.geotiff_mask = None
         self.buffer = 1400
 
-
     def radolan_down(self, *args, **kwargs):
         """
         radolan_down()  tries to download all recent RADOLAN ascii files/
@@ -85,13 +84,13 @@ class Raddo(object):
         -------------------------
             rad_dir_dwd: string
                 Link to Radolan products on DWD FTP server.
-                defaults to "https://opendata.dwd.de/climate_environment/CDC/
+                defaults to "https://opendata.dwd.de/climate_environment/CDC/\
                             grids_germany/hourly/radolan/recent/asc/")
 
             rad_dir_dwd_hist: string
                 Link to Radolan products on DWD FTP server.
-                defaults to "https://opendata.dwd.de/climate_environment/CDC/"
-                            "grids_germany/hourly/radolan/historical/asc/"
+                defaults to "https://opendata.dwd.de/climate_environment/CDC/"\
+                             grids_germany/hourly/radolan/historical/asc/"
 
             rad_dir: string
                 local directory to be processed / already containing radolan data.
