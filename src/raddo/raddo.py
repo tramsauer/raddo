@@ -132,21 +132,36 @@ class Raddo(object):
 
         # Set dates
         if end_date == "today":
-            end_datetime = datetime.datetime.today()
+            self.end_datetime = datetime.datetime.today()
         elif type(end_date) == datetime.datetime:
-            end_datetime = end_date
+            self.end_datetime = end_date
         else:
-            end_datetime = parse(end_date)
+            try:
+                self.end_datetime = parse(end_date)
+            except ValueError as e:
+                print(e)
+                sys.exit(1)
 
-        start_datetime = parse(start_date)
-        assert (end_datetime - start_datetime).days > -1
+        try:
+            self.start_datetime = parse(start_date)
+            assert (self.end_datetime - self.start_datetime).days > -1, \
+                "End date is before start date."
+        except ValueError as e:
+            sys.stderr.write(
+                f"[ERROR]: Start date could not be parsed: {start_date}\n")
+            sys.stderr.write(f"{e}\n\n")
+            sys.exit(1)
+        except AssertionError as e:
+            sys.stderr.write(
+                f"[ERROR]: {e}\n\n")
+            sys.exit(1)
 
         print(pcol.BOLD+pcol.OKBLUE)
         print("-" * 80)
         print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
         print(f"[REMOTE] Radolan directory is set to:\n{rad_dir_dwd}\n")
-        print(f"searching for data from {start_datetime.date()} - "
-              f"{end_datetime.date()}.\n")
+        print(f"searching for data from {self.start_datetime.date()} - "
+              f"{self.end_datetime.date()}.\n")
         print("-" * 80)
         print(pcol.ENDC)
 
@@ -204,13 +219,13 @@ class Raddo(object):
 
         # avoid searching for todays data:
         delta = 1
-        if end_datetime.date() == datetime.datetime.today().date():
+        if self.end_datetime.date() == datetime.datetime.today().date():
             delta -= 1
 
         # create list of possibly available DATA
-        date_list = [start_datetime + datetime.timedelta(days=x)
+        date_list = [self.start_datetime + datetime.timedelta(days=x)
                      for x in range(
-                            int((end_datetime - start_datetime).days) + delta)]
+                            int((self.end_datetime - self.start_datetime).days) + delta)]
         list_DWD = ["RW-{}.tar.gz"
                     .format(datetime.datetime.strftime(x, format="%Y%m%d"))
                     for x in date_list]
@@ -399,7 +414,7 @@ class Raddo(object):
                                              recursive=True)]
         return fl
 
-    def create_netcdf(self, filelist, outdir):
+    def create_netcdf(self, filelist, outdir, no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating NetCDF file...\n')
@@ -468,18 +483,40 @@ class Raddo(object):
         lato[:] = lat
 
         itime = 0
-        for i, fi in enumerate(filelist):
+
+        def _get_date(filename, no_time_correction):
             f = os.path.basename(fi)
             year = int(f[3:7])
             mon = int(f[7:9])
             day = int(f[9:11])
             hour = int(f[12:14])
             minu = int(f[14:16])
-            date = datetime.datetime(year, mon, day,
-                                     hour, minu, 0)
+            if not no_time_correction:
+                minu = 0
+            return f, datetime.datetime(year, mon, day,
+                                        hour, minu, 0)
+
+        timestamps = \
+            np.arange(self.start_datetime,
+                      self.end_datetime+datetime.timedelta(days=1),
+                      datetime.timedelta(hours=1)
+                      ).astype(datetime.datetime).tolist()
+        try:
+            assert len(timestamps) == len(filelist)
+        except AssertionError:
+            missingdates = [
+                t for t in timestamps if t not in
+                [_get_date(f, no_time_correction)[1] for f in filelist]]
+            raise NotImplementedError(
+                f"Missing dates! {missingdates}"
+                "\n\nFilling of missing dates not implemented!")
+
+        for i, fi in enumerate(filelist):
+
+            f, date = _get_date(fi, no_time_correction)
 
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i}]  {f}')
+                             f'   [{i+1}]  {f}')
 
             dtime = (date-basedate).total_seconds()/3600.
             timeo[itime] = dtime
@@ -508,7 +545,7 @@ class Raddo(object):
         res = []
         for i, f in enumerate(filelist):
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i}]  {os.path.basename(f)}')
+                             f'   [{i+1}]  {os.path.basename(f)}')
             outf = os.path.join(outdir,
                                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
@@ -700,6 +737,13 @@ def main():
                         default=False,
                         action='store_true', dest='force_down',
                         help=(f'Forces download of all files.'))
+    parser.add_argument('-t', '--no-time-correction',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='tcorr',
+                        help=(f'Omit time adjustment to previous hour in '
+                              f'netCDF file creation and just use RADOLANs '
+                              f'sum up time HH:50 (Default: false).'))
 
     parser.add_argument('-v', '--version',
                         required=False,
@@ -782,7 +826,9 @@ def main():
             gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
 
             if args.netcdf:
-                rd.create_netcdf(gtiff_files, args.directory)
+                rd.create_netcdf(gtiff_files,
+                                 args.directory,
+                                 no_time_correction=args.tcorr)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
