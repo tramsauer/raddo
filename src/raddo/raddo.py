@@ -230,6 +230,8 @@ class Raddo(object):
                 if f not in fileSet:
                     if hist_filename(f) not in fileSet_hist:
                         missing_files.append(f)
+                else:
+                    files_success.append(f)
         else:
             fileSet = self.list_of_available_files
 
@@ -242,6 +244,8 @@ class Raddo(object):
             for f in list_DWD:
                 if not ((f in fileSet) or (hist_filename(f) in fileSet)):
                     missing_files.append(f)
+                else:
+                    files_success.append(f)
 
         if len(missing_files) > 0:
             print(str(datetime.datetime.now())[:-4], "   {} file(s) missing.\n"
