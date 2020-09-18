@@ -171,7 +171,6 @@ class Raddo(object):
         dates_exist_hist = []
         files_success = []
         try:
-            rad_dir = os.path.join(os.getcwd(), rad_dir)
             os.chdir(rad_dir)
         except FileNotFoundError:
             if not self.yes:
@@ -184,6 +183,8 @@ class Raddo(object):
                     sys.exit(1)
             else:
                 os.makedirs(rad_dir)
+        finally:
+            os.chdir(rad_dir)
 
         search = not self.local_file_list_exists()
         if force or search:
@@ -650,10 +651,11 @@ def main():
                         required=False,
                         default=f"{os.getcwd()}",
                         action='store', dest='directory',
-                        help=(f'Path to local directory where RADOLAN should'
-                              f'be (and may already be) saved. Checks for '
-                              f'existing files only if this flag is set.'
-                              f'\nDefault: {os.getcwd()} (current directory)'))
+                        help=(
+                            f'Absolute path to local directory where RADOLAN'
+                            f' data should be (and may already be) saved. Ch'
+                            f'ecks for existing files only if this flag is s'
+                            f'et\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
                         default=rd.START_DATE,
