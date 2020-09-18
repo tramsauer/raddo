@@ -155,7 +155,20 @@ class Raddo(object):
         dates_exist = []
         dates_exist_hist = []
         files_success = []
-        os.chdir(rad_dir)
+        try:
+            rad_dir = os.path.join(os.getcwd(), rad_dir)
+            os.chdir(rad_dir)
+        except FileNotFoundError:
+            if not self.yes:
+                if user_check(f"The specified RADOLAN directory\n  ==> "
+                              f"'{rad_dir}'\ndoes not exist. "
+                              f"Should it be created?"):
+                    os.makedirs(rad_dir)
+                else:
+                    sys.stderr.write("Exiting.\n\n")
+                    sys.exit(1)
+            else:
+                os.makedirs(rad_dir)
 
         search = not self.local_file_list_exists()
         if force or search:
