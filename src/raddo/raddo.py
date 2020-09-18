@@ -461,14 +461,14 @@ class Raddo(object):
         chunk_lon = 16
         chunk_lat = 16
         chunk_time = 24
-        prco = nco.createVariable('prc', 'i4',  ('time', 'lat', 'lon'),
+        prco = nco.createVariable('prc', 'f4',  ('time', 'lat', 'lon'),
                                   zlib=True,
                                   # chunksizes=[
                                       # chunk_time, chunk_lat, chunk_lon],
                                   fill_value=-9999)
         prco.units = 'mm/h'
-        prco.scale_factor = 0.1
-        prco.add_offset = 0.00
+        # prco.scale_factor = 0.1
+        # prco.add_offset = 0.00
         prco.long_name = \
             'precipitation data from RADOLAN RW Weather Radar Data (DWD)'
         prco.standard_name = \
