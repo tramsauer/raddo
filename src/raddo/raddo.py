@@ -558,9 +558,11 @@ class Raddo(object):
         res = []
         for i, f in enumerate(filelist):
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {os.path.basename(f)}')
-            outf = os.path.join(outdir,
-                                os.path.splitext(os.path.basename(f))[0] + ".tiff")
+                             f'   [{i+1} / {len(filelist)}]  '
+                             f'{os.path.basename(f)}')
+            outf = os.path.join(
+                outdir,
+                os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
             # if self.geotiff_mask is not None:
             if self.geotiff_mask is not None:

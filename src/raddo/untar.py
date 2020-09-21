@@ -12,9 +12,8 @@ If folder to be created exists (regardless of content),
 archive is skipped.
 
 """
-from __future__ import print_function
-
 import os
+import sys
 import re
 import glob
 import tarfile
@@ -24,28 +23,28 @@ from datetime import datetime
 # TODO add *args to accept list of file names
 def untar(**kwargs):
 
-    print("\n"+str(datetime.now())[:-4] + f'   started untarring of files..')
+    sys.stdout.write("\n"+str(datetime.now())[:-4] +
+                     '   started untarring of files..\n')
 
     path = kwargs.get('path', None)
     files = kwargs.get('files', None)
     assert (path is not None) or (files is not None), \
         "Please either specify a path or filelist to untar."
 
-
     def save_untar(filename):
         "untar file into directory named after basename of file."
         f_base = filename.split(".")[0]
         if not os.path.exists(f_base):
             tar = tarfile.open(filename, 'r')
-            print(str(datetime.now())[:-4] + "   ", end="")
-            print("untarring ", filename, end=" ")
-            print("to {}".format(f_base))
+            sys.stdout.write('\r' + str(datetime.now())[:-4] + "   " +
+                             f"untarring {filename} to {f_base}.")
             tar.extractall(path=f_base)
             tar.close()
             del tar
             return f_base
         else:
-            print(str(datetime.now())[:-4] + f"   {f_base} already unpacked.")
+            sys.stdout.write('\r' + str(datetime.now())[:-4] +
+                             f"   {f_base} already unpacked.")
             return f_base
 
     count_to_tar = 0
@@ -55,8 +54,8 @@ def untar(**kwargs):
     if path:
         os.chdir(path)
         files = glob.glob("**/*.tar*", recursive=True)
-        print('\n'+str(datetime.now())[:-4] + \
-              '   getting name of files to untar...')
+        sys.stdout.write('\n'+str(datetime.now())[:-4] +
+                         '   getting name of files to untar...\n')
 
     ret = []
 
@@ -98,11 +97,12 @@ def untar(**kwargs):
                                     del untarred_file
                                     count_to_tar += 1
             os.chdir(curdir)
-        print(str(datetime.now())[:-4] + "   done.")
+        sys.stdout.write(str(datetime.now())[:-4] + "   done.\n")
         return ret
 
     if count_to_tar == 0:
-        print(str(datetime.now())[:-4] + "   no matching files found.")
+        sys.stderr.write(str(datetime.now())[:-4] +
+                         "   no matching files found.\n")
         return ret
 
 

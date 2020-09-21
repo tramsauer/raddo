@@ -19,7 +19,8 @@ __license__ = "gpl3"
 
 
 def sort_tars(**kwargs):
-    print("\n"+str(datetime.now())[:-4] + f'   started sorting of files..')
+    sys.stdout.write("\n"+str(datetime.now())[:-4] +
+                     "   started sorting of files..\n")
     fileSet = glob.glob('*.tar*')
 
     path = kwargs.get('path', None)
@@ -29,13 +30,14 @@ def sort_tars(**kwargs):
 
     if path:
         os.chdir(path)
-        print("\n"+str(datetime.now())[:-4] + f'   getting filenames in {path}..')
+        sys.stdout.write("\n"+str(datetime.now())[:-4] +
+                         "   getting filenames in {path}..\n")
         fileSet = glob.glob('*.tar*')
     else:
         fileSet = files
 
     if len(fileSet) == 0:
-        print('No files found.')
+        sys.stdout.write('No files found.\n')
     else:
         new_paths = []
         for file in fileSet:
@@ -48,20 +50,21 @@ def sort_tars(**kwargs):
                 future_file_path = './{}/'.format(year)
             # print(future_file_path)
             try:
+                # TODO: replace os.system
                 os.system('mkdir -vp {}'.format(future_file_path))
                 os.system('mv -v {} {}'.format(file, future_file_path))
                 new_paths.append(os.path.join(future_file_path, file))
             except Exception:
-                print('ERROR.')
+                sys.stderr.write('ERROR.\n')
 
-    print(str(datetime.now())[:-4], '  Sorting finished.')
+    sys.stdout.write(str(datetime.now())[:-4], '  Sorting finished.\n')
     return new_paths
 
 
 def main():
     class MyParser(argparse.ArgumentParser):
         def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
+            sys.stderr.write('[ERROR]: %s\n' % message)
             self.print_help()
             sys.exit(2)
 
