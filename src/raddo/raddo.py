@@ -503,23 +503,35 @@ class Raddo(object):
                       datetime.timedelta(hours=1)
                       ).astype(datetime.datetime).tolist()
         try:
-            assert len(timestamps) == len(filelist)
-        except AssertionError:
+            assert len(timestamps) == len(filelist), "Missing dates!"
+        except AssertionError as e:
+            sys.stderr.write(f"\n{e}\n")
             missingdates = [
                 t for t in timestamps if t not in
                 [_get_date(f, no_time_correction)[1] for f in filelist]]
-            raise NotImplementedError(
-                f"Missing dates! {missingdates}"
-                "\n\nFilling of missing dates not implemented!")
+            [sys.stdout.write(f"{d}\n") for d in missingdates]
 
-        for i, fi in enumerate(filelist):
+        i = 0
+        for tdate in timestamps:
+            if tdate in missingdates:
+                dtime = (tdate-basedate).total_seconds()/3600.
+                timeo[itime] = dtime
+                prco[itime, :, :] = a * np.nan
+                itime = itime + 1
+                continue
+                assert False, "This should not happen!"
+            else:
+                fi, fdate = _get_date(filelist[i], no_time_correction)
+                i += 1
 
-            f, date = _get_date(fi, no_time_correction)
-
+            if no_time_correction:
+                # sys.sdterr("Cannot assert time correctnes..")
+                pass
+            else:
+                assert fdate == tdate
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {f}')
-
-            dtime = (date-basedate).total_seconds()/3600.
+                             f'   [{i+1}]  {filelist[i]}')
+            dtime = (fdate-basedate).total_seconds()/3600.
             timeo[itime] = dtime
 
             prc = gdal.Open(fi)
