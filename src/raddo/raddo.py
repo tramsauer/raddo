@@ -102,6 +102,9 @@ class Raddo(object):
             end_date: string
                 parsable date string (defaults to yesterday)
 
+            no_time_correction: bool
+                should RADOLAN time correction to full hourly values be omitted
+
             errors_allowed: integer
                 number of tries to download one file (default: 5)
             force:
@@ -122,6 +125,7 @@ class Raddo(object):
         errors_allowed = kwargs.get('errors_allowed', self.ERRORS_ALLOWED)
         start_date = kwargs.get('start_date', self.START_DATE)
         end_date = kwargs.get('end_date', self.END_DATE)
+        self.no_time_correction = kwargs.get('no_time_correction', False)
         force = kwargs.get('force', False)
         force_down = kwargs.get('force_down', False)
         self.yes = kwargs.get('yes', False)
@@ -156,6 +160,12 @@ class Raddo(object):
                 f"[ERROR]: {e}\n\n")
             sys.exit(1)
 
+        self.timestamps = \
+            np.arange(self.start_datetime,
+                      self.end_datetime+datetime.timedelta(days=1),
+                      datetime.timedelta(hours=1)
+                      ).astype(datetime.datetime).tolist()
+
         print(pcol.BOLD+pcol.OKBLUE)
         print("-" * 80)
         print(f"[LOCAL]  Radolan directory is set to:\n{rad_dir}\n")
@@ -171,7 +181,6 @@ class Raddo(object):
         dates_exist_hist = []
         files_success = []
         try:
-            rad_dir = os.path.join(os.getcwd(), rad_dir)
             os.chdir(rad_dir)
         except FileNotFoundError:
             if not self.yes:
@@ -184,6 +193,8 @@ class Raddo(object):
                     sys.exit(1)
             else:
                 os.makedirs(rad_dir)
+        finally:
+            os.chdir(rad_dir)
 
         search = not self.local_file_list_exists()
         if force or search:
@@ -338,6 +349,7 @@ class Raddo(object):
                                       f"   [SUCCESS] {hist_f} has already "
                                       f"been downloaded.\n",
                                       pcol.ENDC)
+                                files_success.append(hist_f)
                                 self.hist_files = True
                             break
 
@@ -410,9 +422,25 @@ class Raddo(object):
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
-            [fl.append(f) for f in glob.glob(os.path.join(d, "**/*asc"),
-                                             recursive=True)]
+            [fl.append(f) for f in sorted(glob.glob(os.path.join(d, "**/*asc"),
+                                                    recursive=True))
+             if self._get_date(os.path.basename(f),
+                               self.no_time_correction)[1]
+             in self.timestamps]
+
         return fl
+
+    def _get_date(self, filename, no_time_correction=False):
+        f = os.path.basename(filename)
+        year = int(f[3:7])
+        mon = int(f[7:9])
+        day = int(f[9:11])
+        hour = int(f[12:14])
+        minu = int(f[14:16])
+        if not no_time_correction:
+            minu = 0
+        return f, datetime.datetime(year, mon, day,
+                                    hour, minu, 0)
 
     def create_netcdf(self, filelist, outdir, no_time_correction=False):
         assert type(filelist) == list
@@ -484,48 +512,51 @@ class Raddo(object):
 
         itime = 0
 
-        def _get_date(filename, no_time_correction):
-            f = os.path.basename(fi)
-            year = int(f[3:7])
-            mon = int(f[7:9])
-            day = int(f[9:11])
-            hour = int(f[12:14])
-            minu = int(f[14:16])
-            if not no_time_correction:
-                minu = 0
-            return f, datetime.datetime(year, mon, day,
-                                        hour, minu, 0)
-
-        timestamps = \
-            np.arange(self.start_datetime,
-                      self.end_datetime+datetime.timedelta(days=1),
-                      datetime.timedelta(hours=1)
-                      ).astype(datetime.datetime).tolist()
         try:
-            assert len(timestamps) == len(filelist)
-        except AssertionError:
+            assert len(self.timestamps) == len(filelist), "Missing dates!"
+            missingdates = []
+        except AssertionError as e:
+            sys.stderr.write(f"\n{e}\n")
+            sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
+                              + "\n" + f"length filelist: {len(filelist)}")
+            sys.stderr.write(str(self.start_datetime))
+            sys.stderr.write(str(self.end_datetime))
+            sys.stderr.write(str(self.timestamps))
+            sys.stderr.write(str(filelist))
+
             missingdates = [
-                t for t in timestamps if t not in
-                [_get_date(f, no_time_correction)[1] for f in filelist]]
-            raise NotImplementedError(
-                f"Missing dates! {missingdates}"
-                "\n\nFilling of missing dates not implemented!")
+                t for t in self.timestamps if t not in
+                [self._get_date(f, no_time_correction)[1] for f in filelist]]
+            [sys.stdout.write(f"{d}\n") for d in missingdates]
 
-        for i, fi in enumerate(filelist):
+        i = 0
+        for tdate in self.timestamps:
+            if tdate in missingdates:
+                dtime = (tdate-basedate).total_seconds()/3600.
+                timeo[itime] = dtime
+                prco[itime, :, :] = a * np.nan
+                itime = itime + 1
+                continue
+                assert False, "This should not happen!"
+            else:
+                fi, fdate = self._get_date(filelist[i], no_time_correction)
 
-            f, date = _get_date(fi, no_time_correction)
-
+            if no_time_correction:
+                # sys.sdterr("Cannot assert time correctnes..")
+                pass
+            else:
+                assert fdate == tdate
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {f}')
-
-            dtime = (date-basedate).total_seconds()/3600.
+                             f'   [{i+1}]  {filelist[i]}')
+            dtime = (fdate-basedate).total_seconds()/3600.
             timeo[itime] = dtime
 
-            prc = gdal.Open(fi)
+            prc = gdal.Open(filelist[i])
             a = prc.ReadAsArray() / 10  # get data
             a[a < 0] = -9999
             prco[itime, :, :] = a  # 1/10 mm in RADOLAN data
             itime = itime + 1
+            i += 1
 
         nco.close()
 
@@ -545,9 +576,11 @@ class Raddo(object):
         res = []
         for i, f in enumerate(filelist):
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {os.path.basename(f)}')
-            outf = os.path.join(outdir,
-                                os.path.splitext(os.path.basename(f))[0] + ".tiff")
+                             f'   [{i+1} / {len(filelist)}]  '
+                             f'{os.path.basename(f)}')
+            outf = os.path.join(
+                outdir,
+                os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
             # if self.geotiff_mask is not None:
             if self.geotiff_mask is not None:
@@ -650,10 +683,11 @@ def main():
                         required=False,
                         default=f"{os.getcwd()}",
                         action='store', dest='directory',
-                        help=(f'Path to local directory where RADOLAN should'
-                              f'be (and may already be) saved. Checks for '
-                              f'existing files only if this flag is set.'
-                              f'\nDefault: {os.getcwd()} (current directory)'))
+                        help=(
+                            f'Absolute path to local directory where RADOLAN'
+                            f' data should be (and may already be) saved. Ch'
+                            f'ecks for existing files only if this flag is s'
+                            f'et\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
                         default=rd.START_DATE,
@@ -791,6 +825,7 @@ def main():
                                        errors_allowed=int(args.errors),
                                        start_date=args.start,
                                        end_date=args.end,
+                                       no_time_correction=args.tcorr,
                                        force=args.force,
                                        force_down=args.force_down,
                                        yes=args.yes,
@@ -827,8 +862,7 @@ def main():
 
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
-                                 args.directory,
-                                 no_time_correction=args.tcorr)
+                                 args.directory)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
