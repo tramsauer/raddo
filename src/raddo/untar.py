@@ -34,7 +34,11 @@ def untar(**kwargs):
     def save_untar(filename):
         "untar file into directory named after basename of file."
         f_base = filename.split(".")[0]
-        if not os.path.exists(f_base):
+        if os.path.exists(f_base):
+            dir_is_empty = (len(os.listdir(f_base)) == 0)
+        else:
+            dir_is_empty = False
+        if not os.path.exists(f_base) or dir_is_empty:
             tar = tarfile.open(filename, 'r')
             sys.stdout.write('\r' + str(datetime.now())[:-4] + "   " +
                              f"untarring {filename} to {f_base}.")
