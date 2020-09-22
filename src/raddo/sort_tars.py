@@ -57,7 +57,7 @@ def sort_tars(**kwargs):
             except Exception:
                 sys.stderr.write('ERROR.\n')
 
-    sys.stdout.write(str(datetime.now())[:-4], '  Sorting finished.\n')
+    sys.stdout.write(str(datetime.now())[:-4] + '  Sorting finished.\n')
     return new_paths
 
 

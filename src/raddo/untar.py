@@ -97,7 +97,7 @@ def untar(**kwargs):
                                     del untarred_file
                                     count_to_tar += 1
             os.chdir(curdir)
-        sys.stdout.write(str(datetime.now())[:-4] + "   done.\n")
+        sys.stdout.write("\n" + str(datetime.now())[:-4] + "   done.\n")
         return ret
 
     if count_to_tar == 0:
