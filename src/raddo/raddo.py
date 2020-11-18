@@ -184,9 +184,9 @@ class Raddo(object):
         if not os.path.isdir(rad_dir):
             if not self.yes:
                 if user_check(f"The specified RADOLAN directory\n  ==> "
-                              f"'{rad_dir}'\ndoes not exist. "
-                              f"Should it be created?"):
-                    os.makedirs(rad_dir)
+                              f"'{os.path.abspath(rad_dir)}'\ndoes not "
+                              f"exist. Should it be created?"):
+                    os.makedirs(os.path.abspath(rad_dir))
                 else:
                     sys.stdout.write("\nExiting.\n\n")
                     sys.exit(0)
@@ -808,6 +808,7 @@ def main():
                               f"\"{os.getcwd()}\"?"):
                 sys.stderr.write(f"User Interruption.\n")
                 sys.exit()
+    args.directory = os.path.abspath(args.directory)
 
     if args.start == rd.START_DATE:
         if not args.yes:
@@ -843,7 +844,7 @@ def main():
             # create tiff directory
             if args.geotiff:
                 tiff_dir = rd.try_create_directory(
-                    os.path.join(args.directory, "tiff"))
+                    os.path.join(os.path.abspath(args.directory), "tiff"))
                 if not args.yes:
                     if len(asc_files) > 7 * 24:
                         user_check("Do you really want to create "
