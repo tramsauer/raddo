@@ -180,21 +180,19 @@ class Raddo(object):
         dates_exist = []
         dates_exist_hist = []
         files_success = []
-        try:
-            os.chdir(rad_dir)
-        except FileNotFoundError:
+
+        if not os.path.isdir(rad_dir):
             if not self.yes:
                 if user_check(f"The specified RADOLAN directory\n  ==> "
-                              f"'{rad_dir}'\ndoes not exist. "
-                              f"Should it be created?"):
-                    os.makedirs(rad_dir)
+                              f"'{os.path.abspath(rad_dir)}'\ndoes not "
+                              f"exist. Should it be created?"):
+                    os.makedirs(os.path.abspath(rad_dir))
                 else:
-                    sys.stderr.write("Exiting.\n\n")
-                    sys.exit(1)
+                    sys.stdout.write("\nExiting.\n\n")
+                    sys.exit(0)
             else:
                 os.makedirs(rad_dir)
-        finally:
-            os.chdir(rad_dir)
+        os.chdir(rad_dir)
 
         search = not self.local_file_list_exists()
         if force or search:
@@ -442,13 +440,27 @@ class Raddo(object):
         return f, datetime.datetime(year, mon, day,
                                     hour, minu, 0)
 
-    def create_netcdf(self, filelist, outdir, no_time_correction=False):
+    def create_netcdf(self, filelist, outdir, outf=None,
+                      no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating NetCDF file...\n')
-
         filelist = sorted(filelist)
-        outf = os.path.join(outdir, "RADOLAN.nc")
+
+        if outf is None:
+            outf = (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
+                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
+        outf = os.path.join(outdir, outf)
+        fc = 1
+        a_outf = outf
+        while True:
+            if not os.path.isfile(a_outf):
+                break
+            else:
+                a_outf = outf[:-3] + f"_{fc}" + outf[-3:]
+            fc += 1
+        outf = a_outf
+        del a_outf
 
         # Initialize netCDF
         ds = gdal.Open(filelist[0])
@@ -513,12 +525,12 @@ class Raddo(object):
         itime = 0
 
         try:
-            assert len(self.timestamps) == len(filelist), "Missing dates!"
             missingdates = []
+            assert len(self.timestamps) == len(filelist), "Missing dates!"
         except AssertionError as e:
             sys.stderr.write(f"\n{e}\n")
             sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
-                              + "\n" + f"length filelist: {len(filelist)}")
+                             + "\n" + f"length filelist: {len(filelist)}")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
             sys.stderr.write(str(self.timestamps))
@@ -558,14 +570,12 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
+        nco.setncattr('missing_dates', missingdates)
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
         sys.stdout.flush()
-        # mask nodata (-1) as np.nan && compensate for 1/10 mm
-        # (although writing as integer for compressing reasons)
-
         return outf
 
     def create_geotiffs(self, filelist, outdir):
@@ -582,15 +592,10 @@ class Raddo(object):
                 outdir,
                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-            # if self.geotiff_mask is not None:
             if self.geotiff_mask is not None:
                 gdal.Warp(outf, f,
                           dstSRS="EPSG:4326",
                           srcSRS=self.DWD_PROJ,
-                          # resampleAlg='bilinear',
-                          # resampleAlg='cubic',
-                          # outputBounds=self.mask_total_bounds,  #  --- output bounds as (minX, minY, maxX, maxY) in target SRS
-                          # outputBoundsSRS --- SRS in which output bounds are expressed, in the case they are not expressed in dstSRS
                           cutlineDSName=self.geotiff_mask,
                           cropToCutline=True,
                           format='GTiff')
@@ -598,7 +603,6 @@ class Raddo(object):
                 gdal.Warp(outf, f,
                           dstSRS="EPSG:4326",
                           srcSRS=self.DWD_PROJ,
-                          # resampleAlg='near',
                           format='GTiff')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
@@ -615,13 +619,14 @@ class Raddo(object):
 
         # create centroids if multi poligons
         # if mf.geom_type == 'Polygon' and len(mf) > 1:
-            # mf = mf.centroids()
+        #     mf = mf.centroids()
 
         with tempfile.NamedTemporaryFile(suffix=".shp") as tmpf:
             self.geotiff_mask = tmpf.name
 
-            # self.mask_bounds = gpd.GeoDataFrame(crs=mf.crs,
-                                                # geometry=mf.unary_union.buffer(self.buffer))
+            # self.mask_bounds = gpd.GeoDataFrame(
+            #     crs=mf.crs,
+            #     geometry=mf.unary_union.buffer(self.buffer))
 
         # unary_union?
         if gtypes == "Polygon":
@@ -650,8 +655,6 @@ def user_check(question):
         return True
     elif do in VALID_N:
         return False
-        # sys.stderr.write(f"User Interruption.\n")
-        # sys.exit()
 
 
 def main():
@@ -737,6 +740,11 @@ def main():
                         action='store_true', dest='complete',
                         help=(f'Run all subcommands. Same as using flags '
                               f'-fxgn.'))
+    parser.add_argument('-N', '--netcdf-file',
+                        required=False,
+                        default=None,
+                        action='store', dest='outf',
+                        help=(f'Name of the output NetCDF file.'))
 
     parser.add_argument('-m', '--mask',
                         required=False,
@@ -813,6 +821,7 @@ def main():
                               f"\"{os.getcwd()}\"?"):
                 sys.stderr.write(f"User Interruption.\n")
                 sys.exit()
+    args.directory = os.path.abspath(args.directory)
 
     if args.start == rd.START_DATE:
         if not args.yes:
@@ -848,7 +857,8 @@ def main():
             # create tiff directory
             if args.geotiff:
                 tiff_dir = rd.try_create_directory(
-                    os.path.join(args.directory, "tiff"))
+                    os.path.join(os.path.abspath(args.directory), "tiff"))
+                # TODO add get tiff files to avoid creation of already available
                 if not args.yes:
                     if len(asc_files) > 7 * 24:
                         user_check("Do you really want to create "
@@ -865,7 +875,8 @@ def main():
 
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
-                                 args.directory)
+                                 args.directory,
+                                 args.outf)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
