@@ -440,13 +440,27 @@ class Raddo(object):
         return f, datetime.datetime(year, mon, day,
                                     hour, minu, 0)
 
-    def create_netcdf(self, filelist, outdir, no_time_correction=False):
+    def create_netcdf(self, filelist, outdir, outf=None,
+                      no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   creating NetCDF file...\n')
-
         filelist = sorted(filelist)
-        outf = os.path.join(outdir, "RADOLAN.nc")
+
+        if outf is None:
+            outf = (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
+                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
+        outf = os.path.join(outdir, outf)
+        fc = 1
+        a_outf = outf
+        while True:
+            if not os.path.isfile(a_outf):
+                break
+            else:
+                a_outf = outf[:-3] + f"_{fc}" + outf[-3:]
+            fc += 1
+        outf = a_outf
+        del a_outf
 
         # Initialize netCDF
         ds = gdal.Open(filelist[0])
@@ -556,7 +570,7 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
-        nco.missing_dates(missingdates)
+        nco.setncattr('missing_dates', missingdates)
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
@@ -720,6 +734,12 @@ def main():
                         action='store_true', dest='netcdf',
                         help=(f'Create a NetCDF from GeoTiffs?'))
 
+    parser.add_argument('-N', '--netcdf-file',
+                        required=False,
+                        default=None,
+                        action='store', dest='outf',
+                        help=(f'Name of the output NetCDF file.'))
+
     parser.add_argument('-m', '--mask',
                         required=False,
                         default=False,
@@ -836,6 +856,7 @@ def main():
             if args.geotiff:
                 tiff_dir = rd.try_create_directory(
                     os.path.join(os.path.abspath(args.directory), "tiff"))
+                # TODO add get tiff files to avoid creation of already available
                 if not args.yes:
                     if len(asc_files) > 7 * 24:
                         user_check("Do you really want to create "
@@ -852,7 +873,8 @@ def main():
 
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
-                                 args.directory)
+                                 args.directory,
+                                 args.outf)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
