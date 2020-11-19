@@ -103,7 +103,7 @@ class Raddo(object):
                 parsable date string (defaults to yesterday)
 
             no_time_correction: bool
-                should RADOLAN time correction to full hourly values be omitted
+                omit RADOLAN time correction to full hourly values
 
             errors_allowed: integer
                 number of tries to download one file (default: 5)
@@ -731,6 +731,13 @@ def main():
                         action='store_true', dest='netcdf',
                         help=(f'Create a NetCDF from GeoTiffs?'))
 
+    parser.add_argument('-C', '--complete',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='complete',
+                        help=(f'Run all subcommands. Same as using flags '
+                              f'-fxgn.'))
+
     parser.add_argument('-m', '--mask',
                         required=False,
                         default=False,
@@ -742,24 +749,12 @@ def main():
                         action='store', dest='buffer',
                         help=(f'Buffer in meter around mask shapefile'
                               ' (Default 1400m).'))
-    parser.add_argument('-C', '--complete',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='complete',
-                        help=(f'Run all subcommands. Same as using flags '
-                              f'-fxgn.'))
-
-    parser.add_argument('-y', '--yes',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='yes',
-                        help=(f'Skip user input. Just accept to download to '
-                              'current directory if not specified otherwise.'))
     # parser.add_argument('-q', '--quiet',
     #                     required=False,
     #                     default=False,
     #                     action='store_true', dest='quiet',
     #                     help=(f'Be quiet.'))
+
     parser.add_argument('-F', '--force',
                         required=False,
                         default=False,
@@ -771,6 +766,7 @@ def main():
                         default=False,
                         action='store_true', dest='force_down',
                         help=(f'Forces download of all files.'))
+
     parser.add_argument('-t', '--no-time-correction',
                         required=False,
                         default=False,
@@ -778,6 +774,13 @@ def main():
                         help=(f'Omit time adjustment to previous hour in '
                               f'netCDF file creation and just use RADOLANs '
                               f'sum up time HH:50 (Default: false).'))
+
+    parser.add_argument('-y', '--yes',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='yes',
+                        help=(f'Skip user input. Just accept to download to '
+                              'current directory if not specified otherwise.'))
 
     parser.add_argument('-v', '--version',
                         required=False,
