@@ -511,12 +511,12 @@ class Raddo(object):
         itime = 0
 
         try:
-            assert len(self.timestamps) == len(filelist), "Missing dates!"
             missingdates = []
+            assert len(self.timestamps) == len(filelist), "Missing dates!"
         except AssertionError as e:
             sys.stderr.write(f"\n{e}\n")
             sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
-                              + "\n" + f"length filelist: {len(filelist)}")
+                             + "\n" + f"length filelist: {len(filelist)}")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
             sys.stderr.write(str(self.timestamps))
@@ -556,14 +556,12 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
+        nco.missing_dates(missingdates)
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
         sys.stdout.flush()
-        # mask nodata (-1) as np.nan && compensate for 1/10 mm
-        # (although writing as integer for compressing reasons)
-
         return outf
 
     def create_geotiffs(self, filelist, outdir):
@@ -580,15 +578,10 @@ class Raddo(object):
                 outdir,
                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-            # if self.geotiff_mask is not None:
             if self.geotiff_mask is not None:
                 gdal.Warp(outf, f,
                           dstSRS="EPSG:4326",
                           srcSRS=self.DWD_PROJ,
-                          # resampleAlg='bilinear',
-                          # resampleAlg='cubic',
-                          # outputBounds=self.mask_total_bounds,  #  --- output bounds as (minX, minY, maxX, maxY) in target SRS
-                          # outputBoundsSRS --- SRS in which output bounds are expressed, in the case they are not expressed in dstSRS
                           cutlineDSName=self.geotiff_mask,
                           cropToCutline=True,
                           format='GTiff')
@@ -596,7 +589,6 @@ class Raddo(object):
                 gdal.Warp(outf, f,
                           dstSRS="EPSG:4326",
                           srcSRS=self.DWD_PROJ,
-                          # resampleAlg='near',
                           format='GTiff')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
@@ -613,13 +605,14 @@ class Raddo(object):
 
         # create centroids if multi poligons
         # if mf.geom_type == 'Polygon' and len(mf) > 1:
-            # mf = mf.centroids()
+        #     mf = mf.centroids()
 
         with tempfile.NamedTemporaryFile(suffix=".shp") as tmpf:
             self.geotiff_mask = tmpf.name
 
-            # self.mask_bounds = gpd.GeoDataFrame(crs=mf.crs,
-                                                # geometry=mf.unary_union.buffer(self.buffer))
+            # self.mask_bounds = gpd.GeoDataFrame(
+            #     crs=mf.crs,
+            #     geometry=mf.unary_union.buffer(self.buffer))
 
         # unary_union?
         if gtypes == "Polygon":
@@ -648,8 +641,6 @@ def user_check(question):
         return True
     elif do in VALID_N:
         return False
-        # sys.stderr.write(f"User Interruption.\n")
-        # sys.exit()
 
 
 def main():
