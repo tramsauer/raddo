@@ -10,7 +10,7 @@ Installation
    The software is developed and tested for usage in Linux.
    Installation via pip and conda are unfortunately not supported yet.
 
-Installing ``raddo`` is simple: clone the repository, change into new directory and run:
+Installing ``raddo`` is simple: clone the repository, change into new directory and install via:
 
 .. code:: bash
 

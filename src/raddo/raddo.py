@@ -675,22 +675,6 @@ def main():
         # usage='run "%(prog)s -h"  for all cli options.'
         )
 
-    parser.add_argument('-u', '--radolan_server_url',
-                        required=False,
-                        default=rd.RAD_DIR_DWD,
-                        action='store', dest='url',
-                        help=(f'Path to recent .asc RADOLAN data on '
-                              f'DWD servers.\nDefault: {rd.RAD_DIR_DWD}'))
-
-    parser.add_argument('-d', '--directory',
-                        required=False,
-                        default=f"{os.getcwd()}",
-                        action='store', dest='directory',
-                        help=(
-                            f'Absolute path to local directory where RADOLAN'
-                            f' data should be (and may already be) saved. Ch'
-                            f'ecks for existing files only if this flag is s'
-                            f'et\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
                         default=rd.START_DATE,
@@ -699,6 +683,7 @@ def main():
                               f'(e.g. "2018-05-20").'
                               f'\nDefault: {rd.START_DATE} '
                               f'(current year\'s Jan 1st)'))
+
     parser.add_argument('-e', '--end',
                         required=False,
                         default=rd.END_DATE,
@@ -706,33 +691,16 @@ def main():
                         help=(f'End date as parsable string '
                               f'(e.g. "2020-05-20").'
                               f'\nDefault: {rd.END_DATE_STR} (yesterday)'))
-    parser.add_argument('-r', '--errors-allowed',
+
+    parser.add_argument('-d', '--directory',
                         required=False,
-                        default=rd.ERRORS_ALLOWED,
-                        action='store', dest='errors',
-                        help=(f'Errors allowed when contacting DWD Server.'
-                              f'\nDefault: {rd.ERRORS_ALLOWED}'))
-    parser.add_argument('-f', '--sort-in-folders',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='sort',
-                        help=(f'Should the data be sorted in folders?'))
-    parser.add_argument('-x', '--extract',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='extract',
-                        help=(f'Should the data be extracted?'))
-    parser.add_argument('-g', '--geotiff',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='geotiff',
-                        help=(f'Set if GeoTiffs in EPSG:4326 should be '
-                              f'created for newly downloaded files.'))
-    parser.add_argument('-n', '--netcdf',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='netcdf',
-                        help=(f'Create a NetCDF from GeoTiffs?'))
+                        default=f"{os.getcwd()}",
+                        action='store', dest='directory',
+                        help=(
+                            f'Absolute path to local directory where RADOLAN'
+                            f' data should be (and may already be) saved. Ch'
+                            f'ecks for existing files only if this flag is se'
+                            f't.\nDefault: {os.getcwd()} (current directory)'))
 
     parser.add_argument('-C', '--complete',
                         required=False,
@@ -740,10 +708,36 @@ def main():
                         action='store_true', dest='complete',
                         help=(f'Run all subcommands. Same as using flags '
                               f'-fxgn.'))
+
+    parser.add_argument('-f', '--sort-in-folders',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='sort',
+                        help=(f'Should the data be sorted in folders?'))
+
+    parser.add_argument('-x', '--extract',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='extract',
+                        help=(f'Should the data be extracted?'))
+
+    parser.add_argument('-g', '--geotiff',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='geotiff',
+                        help=(f'Set if GeoTiffs in EPSG:4326 should be '
+                              f'created for newly downloaded files.'))
+
+    parser.add_argument('-n', '--netcdf',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='netcdf',
+                        help=(f'Create a NetCDF from GeoTiffs?'))
+
     parser.add_argument('-N', '--netcdf-file',
                         required=False,
                         default=None,
-                        action='store', dest='outf',
+                        action='store', dest='outfile',
                         help=(f'Name of the output NetCDF file.'))
 
     parser.add_argument('-m', '--mask',
@@ -751,12 +745,14 @@ def main():
                         default=False,
                         action='store', dest='mask',
                         help=(f'Use mask when creating NetCDF.'))
+
     parser.add_argument('-b', '--buffer',
                         required=False,
                         default=1400,
-                        action='store', dest='buffer',
+                        action='store', dest='buffersize',
                         help=(f'Buffer in meter around mask shapefile'
                               ' (Default 1400m).'))
+
     # parser.add_argument('-q', '--quiet',
     #                     required=False,
     #                     default=False,
@@ -769,19 +765,12 @@ def main():
                         action='store_true', dest='force',
                         help=(f'Forces local file search. Omits faster check '
                               'of ".raddo_local_files.txt".'))
+
     parser.add_argument('-D', '--force-download',
                         required=False,
                         default=False,
                         action='store_true', dest='force_down',
                         help=(f'Forces download of all files.'))
-
-    parser.add_argument('-t', '--no-time-correction',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='tcorr',
-                        help=(f'Omit time adjustment to previous hour in '
-                              f'netCDF file creation and just use RADOLANs '
-                              f'sum up time HH:50 (Default: false).'))
 
     parser.add_argument('-y', '--yes',
                         required=False,
@@ -795,6 +784,29 @@ def main():
                         default=False,
                         action='store_true', dest='version',
                         help=(f'Print information on software version.'))
+
+    parser.add_argument('-u', '--radolan_server_url',
+                        required=False,
+                        default=rd.RAD_DIR_DWD,
+                        action='store', dest='url',
+                        help=(f'Path to recent .asc RADOLAN data on '
+                              f'DWD servers.\nDefault: {rd.RAD_DIR_DWD}'))
+
+    parser.add_argument('-r', '--errors-allowed',
+                        required=False,
+                        default=rd.ERRORS_ALLOWED,
+                        action='store', dest='errors',
+                        help=(f'Errors allowed when contacting DWD Server.'
+                              f'\nDefault: {rd.ERRORS_ALLOWED}'))
+
+    parser.add_argument('-t', '--no-time-correction',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='tcorr',
+                        help=(f'Omit time adjustment to previous hour in '
+                              f'netCDF file creation and just use RADOLANs '
+                              f'sum up time HH:50 (Default: false).'))
+
 
     args = parser.parse_args()
     if args.complete:
@@ -841,7 +853,7 @@ def main():
                                        force=args.force,
                                        force_down=args.force_down,
                                        yes=args.yes,
-                                       buffer=args.buffer)
+                                       buffer=args.buffersize)
     if len(successfull_down) > 0:
         if args.sort:
             new_paths = sort_tars.sort_tars(files=successfull_down)
@@ -876,7 +888,7 @@ def main():
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
                                  args.directory,
-                                 args.outf)
+                                 args.outfile)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
