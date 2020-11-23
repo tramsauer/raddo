@@ -570,7 +570,7 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
-        nco.setncattr('missing_dates', missingdates)
+        nco.missing_dates = missingdates
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
