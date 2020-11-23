@@ -417,6 +417,8 @@ class Raddo(object):
         return directory
 
     def get_asc_files(self, directories):
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   getting available *.asc file names...\n')
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
@@ -878,24 +880,26 @@ def main():
                 if not args.yes:
                     if len(asc_files) > 7 * 24:
                         if not user_check("Do you really want to create "
-                                          f"{len(asc_files)} geotiffs?"):
+                                          f"{len(asc_files)} geotiffs?\n[These"
+                                          " files are only created if not "
+                                          "already available.]"):
                             sys.exit("\nExiting.")
                 # create geotiffs
                 gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
 
             # create temporary directory if geotiffs are not wanted:
             else:
-                if args.netcdf:
-                    args.yes = True
-                    # TODO change to current dir (avoid /tmp overflow?)
-                    tmpd = tempfile.TemporaryDirectory()
-                    tiff_dir = tmpd.name
-                    # create temporary geotiffs
-                    gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
-                    # create netcdf file
-                    rd.create_netcdf(gtiff_files,
-                                     args.directory,
-                                     args.outfile)
+                args.yes = True
+                # TODO change to current dir (avoid /tmp overflow?)
+                tmpd = tempfile.TemporaryDirectory()
+                tiff_dir = tmpd.name
+                # create temporary geotiffs
+                gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+                # create netcdf file
+            if args.netcdf:
+                rd.create_netcdf(gtiff_files,
+                                 args.directory,
+                                 args.outfile)
 
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
