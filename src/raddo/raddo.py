@@ -585,25 +585,30 @@ class Raddo(object):
 
         res = []
         for i, f in enumerate(filelist):
-            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1} / {len(filelist)}]  '
-                             f'{os.path.basename(f)}')
             outf = os.path.join(
                 outdir,
                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-            if self.geotiff_mask is not None:
-                gdal.Warp(outf, f,
-                          dstSRS="EPSG:4326",
-                          srcSRS=self.DWD_PROJ,
-                          cutlineDSName=self.geotiff_mask,
-                          cropToCutline=True,
-                          format='GTiff')
+            if not os.path.isfile(outf):
+                sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                                 f'   [{i+1} / {len(filelist)}]  '
+                                 f'creating {os.path.basename(f)}')
+                if self.geotiff_mask is not None:
+                    gdal.Warp(outf, f,
+                              dstSRS="EPSG:4326",
+                              srcSRS=self.DWD_PROJ,
+                              cutlineDSName=self.geotiff_mask,
+                              cropToCutline=True,
+                              format='GTiff')
+                else:
+                    gdal.Warp(outf, f,
+                              dstSRS="EPSG:4326",
+                              srcSRS=self.DWD_PROJ,
+                              format='GTiff')
             else:
-                gdal.Warp(outf, f,
-                          dstSRS="EPSG:4326",
-                          srcSRS=self.DWD_PROJ,
-                          format='GTiff')
+                sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                                 f'   [{i+1} / {len(filelist)}]  '
+                                 f'{os.path.basename(f)} already exists.')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
@@ -870,25 +875,27 @@ def main():
             if args.geotiff:
                 tiff_dir = rd.try_create_directory(
                     os.path.join(os.path.abspath(args.directory), "tiff"))
-                # TODO add get tiff files to avoid creation of already available
                 if not args.yes:
                     if len(asc_files) > 7 * 24:
-                        user_check("Do you really want to create "
-                                   f"{len(asc_files)} geotiffs?")
+                        if not user_check("Do you really want to create "
+                                          f"{len(asc_files)} geotiffs?"):
+                            sys.exit("\nExiting.")
+                # create geotiffs
+                gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
 
             # create temporary directory if geotiffs are not wanted:
             else:
-                args.yes = True
-                tmpd = tempfile.TemporaryDirectory()
-                tiff_dir = tmpd.name
+                if args.netcdf:
+                    args.yes = True
+                    tmpd = tempfile.TemporaryDirectory()
+                    tiff_dir = tmpd.name
+                    # create geotiffs
+                    gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+                    # create netcdf file
+                    rd.create_netcdf(gtiff_files,
+                                     args.directory,
+                                     args.outfile)
 
-            # create geotiffs
-            gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
-
-            if args.netcdf:
-                rd.create_netcdf(gtiff_files,
-                                 args.directory,
-                                 args.outfile)
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
