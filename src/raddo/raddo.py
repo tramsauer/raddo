@@ -887,9 +887,10 @@ def main():
             else:
                 if args.netcdf:
                     args.yes = True
+                    # TODO change to current dir (avoid /tmp overflow?)
                     tmpd = tempfile.TemporaryDirectory()
                     tiff_dir = tmpd.name
-                    # create geotiffs
+                    # create temporary geotiffs
                     gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
                     # create netcdf file
                     rd.create_netcdf(gtiff_files,
