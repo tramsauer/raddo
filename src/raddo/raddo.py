@@ -383,10 +383,12 @@ class Raddo(object):
             print(pcol.ENDC)
 
     def update_list_of_available_files(self, new_files):
+        new_files = sorted(new_files)
         if len(new_files) > 0:
             if self.local_file_list_exists():
+                # TODO add function to prune duplicates..
                 with open(self.FILELIST, "a") as fl:
-                    for nf in sorted(new_files):
+                    for nf in new_files:
                         fl.write(nf+"\n")
 
                 print(str(datetime.datetime.now())[:-4], "   ", end="")
@@ -394,7 +396,12 @@ class Raddo(object):
                 print(f"Updated file list of available files ({self.FILELIST}) with:",
                       end="")
                 print(pcol.ENDC)
-                print(new_files)
+                if len(new_files) > 20:
+                    print(new_files[:10])
+                    print("...")
+                    print(new_files[-10:])
+                else:
+                    print(new_files)
             else:
                 self.create_file_list_savely(new_files)
 
