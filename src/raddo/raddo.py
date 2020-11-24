@@ -418,7 +418,7 @@ class Raddo(object):
 
     def get_asc_files(self, directories):
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   getting available *.asc file names...\n')
+                         '   getting available *.asc file names...\n\n')
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
@@ -535,8 +535,8 @@ class Raddo(object):
                              + "\n" + f"length filelist: {len(filelist)}")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
-            sys.stderr.write(str(self.timestamps))
-            sys.stderr.write(str(filelist))
+            # sys.stderr.write(str(self.timestamps))
+            # sys.stderr.write(str(filelist))
 
             missingdates = [
                 t for t in self.timestamps if t not in
