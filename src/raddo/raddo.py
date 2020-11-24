@@ -532,15 +532,16 @@ class Raddo(object):
         except AssertionError as e:
             sys.stderr.write(f"\n{e}\n")
             sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
-                             + "\n" + f"length filelist: {len(filelist)}")
+                             + "\n" + f"length filelist: {len(filelist)}\n\n")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
             # sys.stderr.write(str(self.timestamps))
             # sys.stderr.write(str(filelist))
 
-            missingdates = [
-                t for t in self.timestamps if t not in
-                [self._get_date(f, no_time_correction)[1] for f in filelist]]
+            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                             f'   Getting missing dates..')
+            file_dates = [self._get_date(f, no_time_correction)[1] for f in filelist]
+            missingdates = [t for t in self.timestamps if t not in file_dates]
             [sys.stdout.write(f"{d}\n") for d in missingdates]
 
         i = 0
