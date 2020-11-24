@@ -546,10 +546,11 @@ class Raddo(object):
             # sys.stderr.write(str(filelist))
 
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   Getting missing dates..')
+                             f'   Getting missing dates..\n')
             file_dates = [self._get_date(f, no_time_correction)[1] for f in filelist]
             missingdates = [t for t in self.timestamps if t not in file_dates]
             [sys.stdout.write(f"{d}\n") for d in missingdates]
+            sys.stdout.write("\n")
 
         i = 0
         for tdate in self.timestamps:
@@ -569,7 +570,7 @@ class Raddo(object):
             else:
                 assert fdate == tdate
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {filelist[i]}')
+                             f'   [{i+1} / {len(self.timestamps)}]  {filelist[i]}')
             dtime = (fdate-basedate).total_seconds()/3600.
             timeo[itime] = dtime
 
@@ -580,7 +581,7 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
-        nco.missing_dates = missingdates
+        nco.missing_dates = str(missingdates)
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
