@@ -453,7 +453,7 @@ class Raddo(object):
                       no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating NetCDF file...\n')
+                         '   creating NetCDF file:\n' + 25*" ")
         filelist = sorted(filelist)
 
         if outf is None:
@@ -470,6 +470,8 @@ class Raddo(object):
             fc += 1
         outf = a_outf
         del a_outf
+        sys.stdout.write(f'{outf}\n')
+
 
         # Initialize netCDF
         ds = gdal.Open(filelist[0])
@@ -570,7 +572,8 @@ class Raddo(object):
             else:
                 assert fdate == tdate
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1} / {len(self.timestamps)}]  {filelist[i]}')
+                             f'   [{i+1} / {len(self.timestamps)}]  '
+                             f'{os.path.basename(filelist[i])}')
             dtime = (fdate-basedate).total_seconds()/3600.
             timeo[itime] = dtime
 
@@ -908,7 +911,8 @@ def main():
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
                                  args.directory,
-                                 args.outfile)
+                                 args.outfile,
+                                 args.tcorr)
 
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")
