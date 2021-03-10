@@ -3,10 +3,13 @@
 import pytest
 import datetime
 import os
-from raddo.raddo import Raddo
 import tempfile
+
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__),os.pardir,"src"))
 from raddo import sort_tars
 from raddo import untar
+from raddo.raddo import Raddo
 
 __author__ = "Thomas Ramsauer"
 __copyright__ = "Thomas Ramsauer"
@@ -105,7 +108,7 @@ def test_raddo_complete_download_old():
         "%Y-%m-%d")
     END_DATE = _date_str(datetime.datetime.today().date()
                          - datetime.timedelta(days=399))  # Yesterday
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory(dir="") as tmpdirname:
         os.chdir(tmpdirname)
         RAD_DIR = tmpdirname
         rd = Raddo()
