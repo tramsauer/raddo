@@ -33,7 +33,7 @@ DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
 
 
 def _date_str(ds):
-    return datetime.datetime.strftime(END_DATE, "%Y-%m-%d")
+    return datetime.datetime.strftime(ds, "%Y-%m-%d")
 
 
 def test_property_list_of_files():
@@ -107,8 +107,9 @@ def test_raddo_complete_download_old():
         datetime.datetime.today().date() - datetime.timedelta(days=400),
         "%Y-%m-%d")
     END_DATE = _date_str(datetime.datetime.today().date()
-                         - datetime.timedelta(days=399))  # Yesterday
-    with tempfile.TemporaryDirectory(dir="") as tmpdirname:
+                         - datetime.timedelta(days=399))
+    print(START_DATE, END_DATE)
+    with tempfile.TemporaryDirectory() as tmpdirname:
         os.chdir(tmpdirname)
         RAD_DIR = tmpdirname
         rd = Raddo()

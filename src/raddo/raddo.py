@@ -62,8 +62,11 @@ class Raddo(object):
 
         # TODO ($USERCONFIG/.raddo/local_files) ??
         self.START_DATE = f"{datetime.datetime.today().year}-01-01"
-        self.END_DATE = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
-        self.END_DATE_STR = datetime.datetime.strftime(self.END_DATE, "%Y-%m-%d")
+        self.END_DATE = datetime.datetime.today().replace(
+            hour=0, minute=0, second=0, microsecond=0) \
+            - datetime.timedelta(days=1)
+        self.END_DATE_STR = datetime.datetime.strftime(self.END_DATE,
+                                                       "%Y-%m-%d")
 
         self.DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
                          "+a=6370040 +b=6370040 +units=m")
@@ -136,7 +139,8 @@ class Raddo(object):
 
         # Set dates
         if end_date == "today":
-            self.end_datetime = datetime.datetime.today()
+            self.end_datetime = datetime.datetime.today().replace(
+                hour=0, minute=0, second=0, microsecond=0)
         elif type(end_date) == datetime.datetime:
             self.end_datetime = end_date
         else:
@@ -145,6 +149,13 @@ class Raddo(object):
             except ValueError as e:
                 print(e)
                 sys.exit(1)
+
+        # Set max end date to yesterday:
+        if self.end_datetime.date() == datetime.datetime.today().date():
+            self.end_datetime = \
+                datetime.datetime.today().replace(
+                    hour=0, minute=0, second=0, microsecond=0) \
+                - datetime.timedelta(days=1)
 
         try:
             self.start_datetime = parse(start_date)
@@ -530,7 +541,7 @@ class Raddo(object):
         except AssertionError as e:
             sys.stderr.write(f"\n{e}\n")
             sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
-                             + "\n" + f"length filelist: {len(filelist)}")
+                             + "\n" + f"length filelist: {len(filelist)}\n")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
             sys.stderr.write(str(self.timestamps))
