@@ -104,13 +104,12 @@ optional arguments:
   -d DIRECTORY, --directory DIRECTORY
                         Path to local directory where RADOLAN shouldbe (and
                         may already be) saved. Checks for existing files only
-                        if this flag is set. Default: /home/tom (current
-                        directory)
+                        if this flag is set. Default: current directory.
   -s START, --start START
                         Start date as parsable string (e.g. "2018-05-20").
-                        Default: 2020-01-01 (current year\'s Jan 1st)
+                        Default: 14 days ago.
   -e END, --end END     End date as parsable string (e.g. "2020-05-20").
-                        Default: 2020-07-16 (yesterday)
+                        Default: yesterday
   -r ERRORS, --errors-allowed ERRORS
                         Errors allowed when contacting DWD Server. Default: 5
   -f, --sort-in-folders

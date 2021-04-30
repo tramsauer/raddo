@@ -30,9 +30,9 @@ text:
                            directory)
      -s START, --start START
                            Start date as parsable string (e.g. "2018-05-20").
-                           Default: 2020-01-01 (current year\'s Jan 1st)
+                           Default: 14 days ago.
      -e END, --end END     End date as parsable string (e.g. "2020-05-20").
-                           Default: 2020-07-16 (yesterday)
+                           Default: yesterday
      -r ERRORS, --errors-allowed ERRORS
                            Errors allowed when contacting DWD Server. Default: 5
      -f, --sort-in-folders
@@ -145,10 +145,10 @@ Variables and their defaults are:
               defaults to current working directory
 
           start_date: string
-              parsable date string (default "2019-01")
+              parsable date string (default: 14 days ago)
 
           end_date: string
-              parsable date string (defaults to current date)
+              parsable date string (default: yesterday)
 
           errors_allowed: integer
               number of tries to download one file (default: 5)

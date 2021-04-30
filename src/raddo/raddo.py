@@ -61,7 +61,9 @@ class Raddo(object):
         self.RAD_DIR = os.getcwd()
 
         # TODO ($USERCONFIG/.raddo/local_files) ??
-        self.START_DATE = f"{datetime.datetime.today().year}-01-01"
+        today = datetime.datetime.today()
+        self.START_DATE = \
+            f"{(today - datetime.timedelta(days=14)).date()}"
         self.END_DATE = datetime.datetime.today().replace(
             hour=0, minute=0, second=0, microsecond=0) \
             - datetime.timedelta(days=1)
@@ -100,10 +102,10 @@ class Raddo(object):
                 defaults to current working directory
 
             start_date: string
-                parsable date string (default "2019-01")
+                parsable date string (default: 14 days ago)
 
             end_date: string
-                parsable date string (defaults to yesterday)
+                parsable date string (default: yesterday)
 
             no_time_correction: bool
                 should RADOLAN time correction to full hourly values be omitted
@@ -709,7 +711,7 @@ def main():
                         help=(f'Start date as parsable string '
                               f'(e.g. "2018-05-20").'
                               f'\nDefault: {rd.START_DATE} '
-                              f'(current year\'s Jan 1st)'))
+                              f'(14 days ago).'))
     parser.add_argument('-e', '--end',
                         required=False,
                         default=rd.END_DATE,
