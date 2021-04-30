@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 
 `Unreleased changes <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...dev>`__
 
+
+Version `0.5.? <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.1...0.5.?>`__ - 2020-11-??
+----------------------------------------------------------------------------------------------
+Changed
+^^^^^^^
+
+-  fix sorting of flags and rename variables for clarity;
+-  add flag to customize output NetCDF file name
+  -  modify default name
+  -  adjust missing dates attribute
+-  add missing dates attribute to NetCDF file; code clean up
+-  fix path issues if relative path is given (-d)
+-  clean exit if dir is not created
+-  doc update
+
+Added
+^^^^^
+
+
+Removed
+^^^^^^^
+
+
+Version `0.5.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.0...0.5.1>`__ - 2020-09-25
+----------------------------------------------------------------------------------------------
+Changed
+^^^^^^^
+
+-  fix time issues
+-  fix processing if folder available but empty
+-  fix stdout
+-  adjust stdout, use sys.stdout instead of print func
+-  fix rad dir path issue.
+-  fix data format issue - now correct values in netcdf!
+-  change print to sys stdout function
+-  change return filelist of available data in radolan_down
+-  check folder (rad_dir) existance and create if missing
+
+Added
+^^^^^
+-  add filling of missing dates in netCDF file creation
+-  add time correction option, add timestamps on class level
+
+Removed
+^^^^^^^
+
+
+
+Version `0.5.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...0.5.0>`__ - 2020-09-18
+----------------------------------------------------------------------------------------------
+Changed
+^^^^^^^
+
+-  fix data format issue - now correct values in netcdf!
+-  change: return filelist of available data in radolan_down
+-  check folder (rad_dir) existance and create if missing
+
+Added
+^^^^^
+-  add time adjustment in netcdf
+
+Removed
+^^^^^^^
+
+
+
 Version `0.4.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.0...0.4.1>`__ - 2020-07-22
 ----------------------------------------------------------------------------------------------
 Changed

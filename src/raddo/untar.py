@@ -64,7 +64,7 @@ def untar(**kwargs):
     ret = []
 
     if any([f is not None for f in files]):
-        for filename in files:
+        for filename in sorted(files):
             if filename is None:
                 continue
             curdir = os.getcwd()

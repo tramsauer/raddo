@@ -10,58 +10,64 @@ current directory with ``raddo``. For further arguments consult the help
 text:
 
 .. code:: sh
+    usage: raddo [-h] [-s START] [-e END] [-d DIRECTORY] [-C] [-f] [-x] [-g] [-n]
+                 [-N OUTFILE] [-m MASK] [-b BUFFERSIZE] [-F] [-D] [-y] [-v]
+                 [-u URL] [-r ERRORS] [-t]
 
-   usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
-                [-x] [-g] [-n] [-m MASK] [-b BUFFER] [-C] [-y] [-F] [-D] [-v]
+    raddo - utility to download RADOLAN data from DWD servers and prepare for
+    simple usage.
 
-   raddo - utility to download RADOLAN data from DWD servers and prepare for
-   simple usage.
+    optional arguments:
+      -h, --help            show this help message and exit
+      -s START, --start START
+                            Start date as parsable string (e.g. "2018-05-20").
+                            Default: 14 days ago.
+      -e END, --end END     End date as parsable string (e.g. "2020-05-20").
+                            Default: yesterday.
+      -d DIRECTORY, --directory DIRECTORY
+                            Absolute path to local directory where RADOLAN data
+                            should be (and may already be) saved. Checks for
+                            existing files only if this flag is set. Default:
+                            /home/tom/Code/raddo (current directory)
+      -C, --complete        Run all subcommands. Same as using flags -fxgn.
+      -f, --sort-in-folders
+                            Should the data be sorted in folders?
+      -x, --extract         Should the data be extracted?
+      -g, --geotiff         Set if GeoTiffs in EPSG:4326 should be created for
+                            newly downloaded files.
+      -n, --netcdf          Create a NetCDF from GeoTiffs?
+      -N OUTFILE, --netcdf-file OUTFILE
+                            Name of the output NetCDF file.
+      -m MASK, --mask MASK  Use mask when creating NetCDF.
+      -b BUFFERSIZE, --buffer BUFFERSIZE
+                            Buffer in meter around mask shapefile (Default 1400m).
+      -F, --force           Forces local file search. Omits faster check of
+                            ".raddo_local_files.txt".
+      -D, --force-download  Forces download of all files.
+      -y, --yes             Skip user input. Just accept to download to current
+                            directory if not specified otherwise.
+      -v, --version         Print information on software version.
+      -u URL, --radolan_server_url URL
+                            Path to recent .asc RADOLAN data on DWD servers.
+                            Default: https://opendata.dwd.de/climate_environment/C
+                            DC/grids_germany/hourly/radolan/recent/asc/
+      -r ERRORS, --errors-allowed ERRORS
+                            Errors allowed when contacting DWD Server. Default: 5
+      -t, --no-time-correction
+                            Omit time adjustment to previous hour in netCDF file
+                            creation and just use RADOLANs sum up time HH:50
+                            (Default: false).
 
-   optional arguments:
-     -h, --help            show this help message and exit
-     -u URL, --radolan_server_url URL
-                           Path to recent .asc RADOLAN data on DWD servers.
-                           Default: https://opendata.dwd.de/climate_environment/C
-                           DC/grids_germany/hourly/radolan/recent/asc/
-     -d DIRECTORY, --directory DIRECTORY
-                           Path to local directory where RADOLAN shouldbe (and
-                           may already be) saved. Checks for existing files only
-                           if this flag is set. Default: /home/tom (current
-                           directory)
-     -s START, --start START
-                           Start date as parsable string (e.g. "2018-05-20").
-                           Default: 14 days ago.
-     -e END, --end END     End date as parsable string (e.g. "2020-05-20").
-                           Default: yesterday
-     -r ERRORS, --errors-allowed ERRORS
-                           Errors allowed when contacting DWD Server. Default: 5
-     -f, --sort-in-folders
-                           Should the data be sorted in folders?
-     -x, --extract         Should the data be extracted?
-     -g, --geotiff         Set if GeoTiffs in EPSG:4326 should be created for
-                           newly downloaded files.
-     -n, --netcdf          Create a NetCDF from GeoTiffs?
-     -m MASK, --mask MASK  Use mask when creating NetCDF.
-     -b BUFFER, --buffer BUFFER
-                           Buffer in meter around mask shapefile (Default 1400m).
-     -C, --complete        Run all subcommands. Same as using flags -fxgn.
-     -y, --yes             Skip user input. Just accept to download to current
-                           directory if not specified otherwise.
-     -F, --force           Forces local file search. Omits faster check of
-                           ".raddo_local_files.txt".
-     -D, --force-download  Forces download of all files.
-     -v, --version         Print information on software version.
+
 
 Example
 ~~~~~~~
 
-Force local available file search, download and processing (sorting,
-extracting, geotiff & netCDF creation) of ``RADOLAN`` data for point in
-shapefile ``test_pt.shp`` with:
+Download `RADOLAN` data to *folder1* (`-d`) from *2020-07-15* (`-s`) until yesterday (default) for point in shapefile `test_pt.shp` (`-m`). Sort and extract nested archives and create GeoTiffs and a single NetCDF file from there (`-C`). Don't check for available files but just download all needed files (`-D`):
 
 .. code:: sh
 
-   raddo -d "/folder1" -s "2020-07-15" -CFD -m "test_pt.shp"
+   raddo -d "folder1" -s "2020-07-15" -CD -m "test_pt.shp"
 
 More visual:
 

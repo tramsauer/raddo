@@ -108,7 +108,7 @@ class Raddo(object):
                 parsable date string (default: yesterday)
 
             no_time_correction: bool
-                should RADOLAN time correction to full hourly values be omitted
+                omit RADOLAN time correction to full hourly values
 
             errors_allowed: integer
                 number of tries to download one file (default: 5)
@@ -396,10 +396,12 @@ class Raddo(object):
             print(pcol.ENDC)
 
     def update_list_of_available_files(self, new_files):
+        new_files = sorted(new_files)
         if len(new_files) > 0:
             if self.local_file_list_exists():
+                # TODO add function to prune duplicates..
                 with open(self.FILELIST, "a") as fl:
-                    for nf in sorted(new_files):
+                    for nf in new_files:
                         fl.write(nf+"\n")
 
                 print(str(datetime.datetime.now())[:-4], "   ", end="")
@@ -407,7 +409,12 @@ class Raddo(object):
                 print(f"Updated file list of available files ({self.FILELIST}) with:",
                       end="")
                 print(pcol.ENDC)
-                print(new_files)
+                if len(new_files) > 20:
+                    print(new_files[:10])
+                    print("...")
+                    print(new_files[-10:])
+                else:
+                    print(new_files)
             else:
                 self.create_file_list_savely(new_files)
 
@@ -430,6 +437,8 @@ class Raddo(object):
         return directory
 
     def get_asc_files(self, directories):
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   getting available *.asc file names...\n\n')
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
@@ -457,7 +466,7 @@ class Raddo(object):
                       no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating NetCDF file...\n')
+                         '   creating NetCDF file:\n' + 25*" ")
         filelist = sorted(filelist)
 
         if outf is None:
@@ -474,6 +483,8 @@ class Raddo(object):
             fc += 1
         outf = a_outf
         del a_outf
+        sys.stdout.write(f'{outf}\n')
+
 
         # Initialize netCDF
         ds = gdal.Open(filelist[0])
@@ -543,16 +554,18 @@ class Raddo(object):
         except AssertionError as e:
             sys.stderr.write(f"\n{e}\n")
             sys.stderr.write(f"length timestamps: {len(self.timestamps)}"
-                             + "\n" + f"length filelist: {len(filelist)}\n")
+                             + "\n" + f"length filelist: {len(filelist)}\n\n")
             sys.stderr.write(str(self.start_datetime))
             sys.stderr.write(str(self.end_datetime))
-            sys.stderr.write(str(self.timestamps))
-            sys.stderr.write(str(filelist))
+            # sys.stderr.write(str(self.timestamps))
+            # sys.stderr.write(str(filelist))
 
-            missingdates = [
-                t for t in self.timestamps if t not in
-                [self._get_date(f, no_time_correction)[1] for f in filelist]]
+            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                             f'   Getting missing dates..\n')
+            file_dates = [self._get_date(f, no_time_correction)[1] for f in filelist]
+            missingdates = [t for t in self.timestamps if t not in file_dates]
             [sys.stdout.write(f"{d}\n") for d in missingdates]
+            sys.stdout.write("\n")
 
         i = 0
         for tdate in self.timestamps:
@@ -572,7 +585,8 @@ class Raddo(object):
             else:
                 assert fdate == tdate
             sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1}]  {filelist[i]}')
+                             f'   [{i+1} / {len(self.timestamps)}]  '
+                             f'{os.path.basename(filelist[i])}')
             dtime = (fdate-basedate).total_seconds()/3600.
             timeo[itime] = dtime
 
@@ -583,7 +597,7 @@ class Raddo(object):
             itime = itime + 1
             i += 1
 
-        nco.setncattr('missing_dates', missingdates)
+        nco.missing_dates = str(missingdates)
         nco.close()
 
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
@@ -598,25 +612,30 @@ class Raddo(object):
 
         res = []
         for i, f in enumerate(filelist):
-            sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
-                             f'   [{i+1} / {len(filelist)}]  '
-                             f'{os.path.basename(f)}')
             outf = os.path.join(
                 outdir,
                 os.path.splitext(os.path.basename(f))[0] + ".tiff")
 
-            if self.geotiff_mask is not None:
-                gdal.Warp(outf, f,
-                          dstSRS="EPSG:4326",
-                          srcSRS=self.DWD_PROJ,
-                          cutlineDSName=self.geotiff_mask,
-                          cropToCutline=True,
-                          format='GTiff')
+            if not os.path.isfile(outf):
+                sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                                 f'   [{i+1} / {len(filelist)}]  '
+                                 f'creating {os.path.basename(f)}')
+                if self.geotiff_mask is not None:
+                    gdal.Warp(outf, f,
+                              dstSRS="EPSG:4326",
+                              srcSRS=self.DWD_PROJ,
+                              cutlineDSName=self.geotiff_mask,
+                              cropToCutline=True,
+                              format='GTiff')
+                else:
+                    gdal.Warp(outf, f,
+                              dstSRS="EPSG:4326",
+                              srcSRS=self.DWD_PROJ,
+                              format='GTiff')
             else:
-                gdal.Warp(outf, f,
-                          dstSRS="EPSG:4326",
-                          srcSRS=self.DWD_PROJ,
-                          format='GTiff')
+                sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
+                                 f'   [{i+1} / {len(filelist)}]  '
+                                 f'{os.path.basename(f)} already exists.')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
@@ -688,22 +707,6 @@ def main():
         # usage='run "%(prog)s -h"  for all cli options.'
         )
 
-    parser.add_argument('-u', '--radolan_server_url',
-                        required=False,
-                        default=rd.RAD_DIR_DWD,
-                        action='store', dest='url',
-                        help=(f'Path to recent .asc RADOLAN data on '
-                              f'DWD servers.\nDefault: {rd.RAD_DIR_DWD}'))
-
-    parser.add_argument('-d', '--directory',
-                        required=False,
-                        default=f"{os.getcwd()}",
-                        action='store', dest='directory',
-                        help=(
-                            f'Absolute path to local directory where RADOLAN'
-                            f' data should be (and may already be) saved. Ch'
-                            f'ecks for existing files only if this flag is s'
-                            f'et\nDefault: {os.getcwd()} (current directory)'))
     parser.add_argument('-s', '--start',
                         required=False,
                         default=rd.START_DATE,
@@ -719,28 +722,43 @@ def main():
                         help=(f'End date as parsable string '
                               f'(e.g. "2020-05-20").'
                               f'\nDefault: {rd.END_DATE_STR} (yesterday)'))
-    parser.add_argument('-r', '--errors-allowed',
+
+    parser.add_argument('-d', '--directory',
                         required=False,
-                        default=rd.ERRORS_ALLOWED,
-                        action='store', dest='errors',
-                        help=(f'Errors allowed when contacting DWD Server.'
-                              f'\nDefault: {rd.ERRORS_ALLOWED}'))
+                        default=f"{os.getcwd()}",
+                        action='store', dest='directory',
+                        help=(
+                            f'Absolute path to local directory where RADOLAN'
+                            f' data should be (and may already be) saved. Ch'
+                            f'ecks for existing files only if this flag is se'
+                            f't.\nDefault: {os.getcwd()} (current directory)'))
+
+    parser.add_argument('-C', '--complete',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='complete',
+                        help=(f'Run all subcommands. Same as using flags '
+                              f'-fxgn.'))
+
     parser.add_argument('-f', '--sort-in-folders',
                         required=False,
                         default=False,
                         action='store_true', dest='sort',
                         help=(f'Should the data be sorted in folders?'))
+
     parser.add_argument('-x', '--extract',
                         required=False,
                         default=False,
                         action='store_true', dest='extract',
                         help=(f'Should the data be extracted?'))
+
     parser.add_argument('-g', '--geotiff',
                         required=False,
                         default=False,
                         action='store_true', dest='geotiff',
                         help=(f'Set if GeoTiffs in EPSG:4326 should be '
                               f'created for newly downloaded files.'))
+
     parser.add_argument('-n', '--netcdf',
                         required=False,
                         default=False,
@@ -750,7 +768,7 @@ def main():
     parser.add_argument('-N', '--netcdf-file',
                         required=False,
                         default=None,
-                        action='store', dest='outf',
+                        action='store', dest='outfile',
                         help=(f'Name of the output NetCDF file.'))
 
     parser.add_argument('-m', '--mask',
@@ -758,18 +776,32 @@ def main():
                         default=False,
                         action='store', dest='mask',
                         help=(f'Use mask when creating NetCDF.'))
+
     parser.add_argument('-b', '--buffer',
                         required=False,
                         default=1400,
-                        action='store', dest='buffer',
+                        action='store', dest='buffersize',
                         help=(f'Buffer in meter around mask shapefile'
                               ' (Default 1400m).'))
-    parser.add_argument('-C', '--complete',
+
+    # parser.add_argument('-q', '--quiet',
+    #                     required=False,
+    #                     default=False,
+    #                     action='store_true', dest='quiet',
+    #                     help=(f'Be quiet.'))
+
+    parser.add_argument('-F', '--force',
                         required=False,
                         default=False,
-                        action='store_true', dest='complete',
-                        help=(f'Run all subcommands. Same as using flags '
-                              f'-fxgn.'))
+                        action='store_true', dest='force',
+                        help=(f'Forces local file search. Omits faster check '
+                              'of ".raddo_local_files.txt".'))
+
+    parser.add_argument('-D', '--force-download',
+                        required=False,
+                        default=False,
+                        action='store_true', dest='force_down',
+                        help=(f'Forces download of all files.'))
 
     parser.add_argument('-y', '--yes',
                         required=False,
@@ -777,22 +809,27 @@ def main():
                         action='store_true', dest='yes',
                         help=(f'Skip user input. Just accept to download to '
                               'current directory if not specified otherwise.'))
-    # parser.add_argument('-q', '--quiet',
-    #                     required=False,
-    #                     default=False,
-    #                     action='store_true', dest='quiet',
-    #                     help=(f'Be quiet.'))
-    parser.add_argument('-F', '--force',
+
+    parser.add_argument('-v', '--version',
                         required=False,
                         default=False,
-                        action='store_true', dest='force',
-                        help=(f'Forces local file search. Omits faster check '
-                              'of ".raddo_local_files.txt".'))
-    parser.add_argument('-D', '--force-download',
+                        action='store_true', dest='version',
+                        help=(f'Print information on software version.'))
+
+    parser.add_argument('-u', '--radolan_server_url',
                         required=False,
-                        default=False,
-                        action='store_true', dest='force_down',
-                        help=(f'Forces download of all files.'))
+                        default=rd.RAD_DIR_DWD,
+                        action='store', dest='url',
+                        help=(f'Path to recent .asc RADOLAN data on '
+                              f'DWD servers.\nDefault: {rd.RAD_DIR_DWD}'))
+
+    parser.add_argument('-r', '--errors-allowed',
+                        required=False,
+                        default=rd.ERRORS_ALLOWED,
+                        action='store', dest='errors',
+                        help=(f'Errors allowed when contacting DWD Server.'
+                              f'\nDefault: {rd.ERRORS_ALLOWED}'))
+
     parser.add_argument('-t', '--no-time-correction',
                         required=False,
                         default=False,
@@ -801,11 +838,6 @@ def main():
                               f'netCDF file creation and just use RADOLANs '
                               f'sum up time HH:50 (Default: false).'))
 
-    parser.add_argument('-v', '--version',
-                        required=False,
-                        default=False,
-                        action='store_true', dest='version',
-                        help=(f'Print information on software version.'))
 
     args = parser.parse_args()
     if args.complete:
@@ -855,7 +887,7 @@ def main():
                                        force=args.force,
                                        force_down=args.force_down,
                                        yes=args.yes,
-                                       buffer=args.buffer)
+                                       buffer=args.buffersize)
     if len(successfull_down) > 0:
         new_paths = []
         untarred_dirs = []
@@ -871,31 +903,37 @@ def main():
                 if args.mask:
                     rd.read_mask(args.mask)
 
-                # create tiff directory
-                if args.geotiff:
-                    tiff_dir = rd.try_create_directory(
-                        os.path.join(os.path.abspath(args.directory), "tiff"))
-                    # TODO add get tiff files to avoid creation of already available
-                    if not args.yes:
-                        if len(asc_files) > 7 * 24:
-                            user_check("Do you really want to create "
-                                    f"{len(asc_files)} geotiffs?")
-
-                # create temporary directory if geotiffs are not wanted:
-                else:
-                    args.yes = True
-                    tmpd = tempfile.TemporaryDirectory()
-                    tiff_dir = tmpd.name
-
+            # create tiff directory
+            if args.geotiff:
+                tiff_dir = rd.try_create_directory(
+                    os.path.join(os.path.abspath(args.directory), "tiff"))
+                if not args.yes:
+                    if len(asc_files) > 7 * 24:
+                        if not user_check("Do you really want to create "
+                                          f"{len(asc_files)} geotiffs?\n[These"
+                                          " files are only created if not "
+                                          "already available.]"):
+                            sys.exit("\nExiting.")
                 # create geotiffs
                 gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
 
-                if args.netcdf:
-                    rd.create_netcdf(gtiff_files,
-                                    args.directory,
-                                    args.outf)
+            # create temporary directory if geotiffs are not wanted:
             else:
-                print("Cannot create GeoTiffs - no newly extracted *.asc files.")
+                args.yes = True
+                # TODO change to current dir (avoid /tmp overflow?)
+                tmpd = tempfile.TemporaryDirectory()
+                tiff_dir = tmpd.name
+                # create temporary geotiffs
+                gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+            # create netcdf file
+            if args.netcdf:
+                rd.create_netcdf(gtiff_files,
+                                 args.directory,
+                                 args.outfile,
+                                 args.tcorr)
+
+        else:
+            print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
         try:
             tmpd.cleanup()
