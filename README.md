@@ -85,8 +85,9 @@ if you want to work on the code.
 
 ## Usage <a name="Usage"></a>
 
-Download RADOLAN data from *{current-year}-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
+Download RADOLAN data from 14 days ago till *yesterday* to current directory with `raddo`.
 
+For further arguments consult the help text:
 
 ``` sh
 usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
