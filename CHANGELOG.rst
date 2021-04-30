@@ -3,32 +3,37 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
-`Unreleased changes <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...dev>`__
+`Unreleased changes <../../compare/0.6.0...dev>`__
 
-
-Version `0.5.? <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.1...0.5.?>`__ - 2020-11-??
+Version `0.6.0 <../../compare/0.5.1...0.6.0>`__ - 2021-04-30
 ----------------------------------------------------------------------------------------------
 Changed
 ^^^^^^^
 
 -  fix sorting of flags and rename variables for clarity;
+-  default start date now 14 days in the past
 -  add flag to customize output NetCDF file name
   -  modify default name
   -  adjust missing dates attribute
 -  add missing dates attribute to NetCDF file; code clean up
 -  fix path issues if relative path is given (-d)
+   - fix sorting base path
+-  fix flow of interaction for netcdf creation and geotiff creation
 -  clean exit if dir is not created
--  doc update
+-  doc & README update
+
 
 Added
 ^^^^^
-
+- Dockerfile: raddo now available as docker image: `docker pull tramsauer/raddo`
+- Travis integration
 
 Removed
 ^^^^^^^
+- Crontab section from README -> not relevant.
 
 
-Version `0.5.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.0...0.5.1>`__ - 2020-09-25
+Version `0.5.1 <../../compare/0.5.0...0.5.1>`__ - 2020-09-25
 ----------------------------------------------------------------------------------------------
 Changed
 ^^^^^^^
@@ -53,7 +58,7 @@ Removed
 
 
 
-Version `0.5.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...0.5.0>`__ - 2020-09-18
+Version `0.5.0 <../../compare/0.4.1...0.5.0>`__ - 2020-09-18
 ----------------------------------------------------------------------------------------------
 Changed
 ^^^^^^^
@@ -71,7 +76,7 @@ Removed
 
 
 
-Version `0.4.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.0...0.4.1>`__ - 2020-07-22
+Version `0.4.1 <../../compare/0.4.0...0.4.1>`__ - 2020-07-22
 ----------------------------------------------------------------------------------------------
 Changed
 ^^^^^^^
@@ -85,7 +90,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.4.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.2...0.4.0>`__ - 2020-07-22
+Version `0.4.0 <../../compare/0.3.2...0.4.0>`__ - 2020-07-22
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -101,7 +106,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.3.2 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.1...0.3.2>`__ - 2020-07-20
+Version `0.3.2 <../../compare/0.3.1...0.3.2>`__ - 2020-07-20
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -116,7 +121,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.3.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.3.0...0.3.1>`__ - 2020-07-17
+Version `0.3.1 <../../compare/0.3.0...0.3.1>`__ - 2020-07-17
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -129,7 +134,7 @@ Added
 Removed
 ^^^^^^^
 
-Version `0.3.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.2.1...0.3.0>`__ - 2020-07-17
+Version `0.3.0 <../../compare/0.2.1...0.3.0>`__ - 2020-07-17
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -148,7 +153,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.2.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.2.0...0.2.1>`__ - 2020-07-15
+Version `0.2.1 <../../compare/0.2.0...0.2.1>`__ - 2020-07-15
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -166,7 +171,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.2.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.1.1...0.2.0>`__ - 2020-07-15
+Version `0.2.0 <../../compare/0.1.1...0.2.0>`__ - 2020-07-15
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -184,7 +189,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.1.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.1.0...0.1.1>`__ - 2020-07-01
+Version `0.1.1 <../../compare/0.1.0...0.1.1>`__ - 2020-07-01
 ----------------------------------------------------------------------------------------------
 
 Changed
@@ -200,7 +205,7 @@ Removed
 ^^^^^^^
 
 
-Version `0.1.0 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/ef2fa4...0.1.0>`__ - 2020-07-10
+Version `0.1.0 <../../compare/ef2fa4...0.1.0>`__ - 2020-07-10
 -----------------------------------------------------------------------------------------------
 
 -  Initial release version.
