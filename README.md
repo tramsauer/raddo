@@ -48,7 +48,7 @@ A conda package for raddo will potentially be available in the future through `c
 However, also direct installation is possible. A `pip` package is however not provided for that reasons.
 Testing is done using the conda version of GDAL with `pytest`.
 
-There is also a docker image available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) if you don't mind the overhead. See the docker section below for instructions.
+There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) if you don't mind the overhead. See the [Docker](#Docker) section below for instructions.
 
 ### GDAL <a name="GDAL"></a>
 
