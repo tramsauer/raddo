@@ -45,7 +45,7 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 The software is developed and tested for usage in Linux.
 The preferred way of installing is in a `conda` environment because a working GDAL install is more likely with this option.
 A conda package for raddo will potentially be available in the future through `conda forge`.
-However, also direct installation is possible. A `pip` package is however not provided for that reasons.
+However, also direct installation is possible. A `pip` package is however not provided for that reason.
 Testing is done using the conda version of GDAL with `pytest`.
 
 There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) if you don't mind the overhead. See the [Docker](#Docker) section below for instructions.
@@ -132,6 +132,11 @@ optional arguments:
 
 ```
 ### CLI Example <a name="CLIExample"></a>
+
+Download data since June 15th 2020 to current directory and sort, extract, create Geotiffs and a NetCDF file:
+``` sh
+raddo -s "2020-07-15" -C
+```
 
 Force local available file search, download and processing (sorting, extracting, geotiff & netCDF creation) of `RADOLAN` data for point in shapefile `test_pt.shp` with:
 ``` sh
