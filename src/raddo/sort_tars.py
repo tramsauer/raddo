@@ -21,7 +21,6 @@ __license__ = "gpl3"
 def sort_tars(**kwargs):
     sys.stdout.write("\n"+str(datetime.now())[:-4] +
                      "   started sorting of files..\n")
-    fileSet = glob.glob('*.tar*')
 
     path = kwargs.get('path', None)
     files = kwargs.get('files', None)
@@ -39,15 +38,18 @@ def sort_tars(**kwargs):
     if len(fileSet) == 0:
         sys.stdout.write('No files found.\n')
     else:
+        future_base_path = os.path.dirname(os.path.abspath(fileSet[0]))
         new_paths = []
         for file in fileSet:
             year = file[3:7]
             if not os.path.splitext(file)[-1] == ".tar":
                 month = file[7:9]
-                future_file_path = './{}/RW-{}{}'.format(year, year, month)
+                future_file_path = \
+                    future_base_path + '/{}/RW-{}{}'.format(year, year, month)
             else:
                 month = ""
-                future_file_path = './{}/'.format(year)
+                future_file_path = \
+                    future_base_path + '/{}/'.format(year)
             # print(future_file_path)
             try:
                 # TODO: replace os.system

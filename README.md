@@ -205,40 +205,56 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 
  ```
 
-## Warnings
+### Docker <a name="Docker"></a>
+
+
+Docker lets you run raddo in a containerized form.
+All depenencies are set up - including GDAL.
+With the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
+Alternatively `docker pull raddo` gets you the prebuilt image from docker-hub.
+
+`raddo` then can be used like this:
+
+`docker run -ti --rm  -v /tmp/RADOLAN:/data raddo -C -s "20210422"`
+
+- `-ti`: docker runs in an interactive tty
+- `--rm`: the container is destroyed after usage
+- `-v /tmp/RADOLAN:/data`: an existing folder (`/tmp/RADOLAN`) is connected to the container (internal folder `/data`)
+  - If asked accept to save the data in `/data`
+- `raddo`: image name, that automatically starts the `raddo` program
+- `-C -s ....`: after the image name, additional arguments for `raddo` can be added, here:
+  - `-C`: complete processing
+  - `-s "20210422"`: starting date
+
+The data can then be found in the linked folder, e.g. `/tmp/RADOLAN`.
+
+
+### Warnings <a name="Warnings"></a>
 
 - currently, if a shapefile mask is used, sub-optimal *nearest neighbour resampling* is applied in the GeoTiff conversion (as other methods were not functional in gdal python bindings..(?)).
 - if GeoTiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
 - if multiple polygons are used as mask, they are dissolved & buffered.
 - `raddo` does not recreate nor warn if GeoTiffs are already available.
 
-## Contributing
+## Contributing <a name="Contributing"></a>
 
 See [CONTRIBUTING](CONTRIBUTING.md) document.
 
-## License
+## License <a name="License"></a>
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 
 Please find the license agreement in [LICENSE.txt](LICENSE.txt)
 
-## Changes
+## Changelog <a name="Changelog"></a>
 
 See [Changelog](CHANGELOG.md) document.
 
-## Further Development
+## Further Development <a name="FurtherDevelopment"></a>
 
-- [X] add historical
-- [X] integrate GeoTiff generation (reprojection)
-- [X] integrate aggregation to NetCDF files
-- [X] add tests!
-- [ ] add docs
 - [ ] add DOI
-- [ ] pip install?
-- [ ] add pypi install
 - [ ] add conda install
-- [X] gif for cli
 
-## See also
+## See also <a name="Seealso"></a>
 
 - [wradlib](https://github.com/wradlib/wradlib):
   > An Open Source Library for Weather Radar Data Processing

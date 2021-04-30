@@ -15,7 +15,7 @@ import glob
 import datetime
 import argparse
 import tempfile
-import gdal
+from osgeo import gdal
 import numpy as np
 import geopandas as gpd
 import netCDF4
