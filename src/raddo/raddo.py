@@ -680,8 +680,8 @@ def main():
 
     parser = MyParser(
         description=(
-            ' raddo - utility to download RADOLAN data from DWD servers\n'
-            '         and prepare for simple usage.'),
+            ' raddo - utility to download and preprocess RADOLAN RW\n'
+            '         weather radar data from DWD servers.'),
         prog="raddo",
         # usage='run "%(prog)s -h"  for all cli options.'
         )
@@ -825,6 +825,9 @@ def main():
 
     # if no -d flag:
     if args.directory == os.getcwd():
+        if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
+            sys.stdout.write(f"{parser.print_help()}\n\n")
+
         if not args.yes:
             if not user_check(f"Do you really want to store RADOLAN data in "
                               f"\"{os.getcwd()}\"?"):
@@ -852,42 +855,45 @@ def main():
                                        yes=args.yes,
                                        buffer=args.buffer)
     if len(successfull_down) > 0:
+        new_paths = []
+        untarred_dirs = []
         if args.sort:
             new_paths = sort_tars.sort_tars(files=successfull_down)
         if args.extract:
             untarred_dirs = untar.untar(files=new_paths, hist=rd.hist_files)
 
-        if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
-            asc_files = rd.get_asc_files(untarred_dirs)
+        if (args.geotiff or args.netcdf):
+            if len(untarred_dirs) > 0:
+                asc_files = rd.get_asc_files(untarred_dirs)
 
-            if args.mask:
-                rd.read_mask(args.mask)
+                if args.mask:
+                    rd.read_mask(args.mask)
 
-            # create tiff directory
-            if args.geotiff:
-                tiff_dir = rd.try_create_directory(
-                    os.path.join(os.path.abspath(args.directory), "tiff"))
-                # TODO add get tiff files to avoid creation of already available
-                if not args.yes:
-                    if len(asc_files) > 7 * 24:
-                        user_check("Do you really want to create "
-                                   f"{len(asc_files)} geotiffs?")
+                # create tiff directory
+                if args.geotiff:
+                    tiff_dir = rd.try_create_directory(
+                        os.path.join(os.path.abspath(args.directory), "tiff"))
+                    # TODO add get tiff files to avoid creation of already available
+                    if not args.yes:
+                        if len(asc_files) > 7 * 24:
+                            user_check("Do you really want to create "
+                                    f"{len(asc_files)} geotiffs?")
 
-            # create temporary directory if geotiffs are not wanted:
+                # create temporary directory if geotiffs are not wanted:
+                else:
+                    args.yes = True
+                    tmpd = tempfile.TemporaryDirectory()
+                    tiff_dir = tmpd.name
+
+                # create geotiffs
+                gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+
+                if args.netcdf:
+                    rd.create_netcdf(gtiff_files,
+                                    args.directory,
+                                    args.outf)
             else:
-                args.yes = True
-                tmpd = tempfile.TemporaryDirectory()
-                tiff_dir = tmpd.name
-
-            # create geotiffs
-            gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
-
-            if args.netcdf:
-                rd.create_netcdf(gtiff_files,
-                                 args.directory,
-                                 args.outf)
-        else:
-            print("Cannot create GeoTiffs - no newly extracted *.asc files.")
+                print("Cannot create GeoTiffs - no newly extracted *.asc files.")
 
         try:
             tmpd.cleanup()
