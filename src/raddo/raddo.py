@@ -15,7 +15,7 @@ import glob
 import datetime
 import argparse
 import tempfile
-import gdal
+from osgeo import gdal
 import numpy as np
 import geopandas as gpd
 import netCDF4
@@ -61,9 +61,14 @@ class Raddo(object):
         self.RAD_DIR = os.getcwd()
 
         # TODO ($USERCONFIG/.raddo/local_files) ??
-        self.START_DATE = f"{datetime.datetime.today().year}-01-01"
-        self.END_DATE = datetime.datetime.today() - datetime.timedelta(1)  # Yesterday
-        self.END_DATE_STR = datetime.datetime.strftime(self.END_DATE, "%Y-%m-%d")
+        today = datetime.datetime.today()
+        self.START_DATE = \
+            f"{(today - datetime.timedelta(days=14)).date()}"
+        self.END_DATE = datetime.datetime.today().replace(
+            hour=0, minute=0, second=0, microsecond=0) \
+            - datetime.timedelta(days=1)
+        self.END_DATE_STR = datetime.datetime.strftime(self.END_DATE,
+                                                       "%Y-%m-%d")
 
         self.DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
                          "+a=6370040 +b=6370040 +units=m")
@@ -97,10 +102,10 @@ class Raddo(object):
                 defaults to current working directory
 
             start_date: string
-                parsable date string (default "2019-01")
+                parsable date string (default: 14 days ago)
 
             end_date: string
-                parsable date string (defaults to yesterday)
+                parsable date string (default: yesterday)
 
             no_time_correction: bool
                 omit RADOLAN time correction to full hourly values
@@ -136,7 +141,8 @@ class Raddo(object):
 
         # Set dates
         if end_date == "today":
-            self.end_datetime = datetime.datetime.today()
+            self.end_datetime = datetime.datetime.today().replace(
+                hour=0, minute=0, second=0, microsecond=0)
         elif type(end_date) == datetime.datetime:
             self.end_datetime = end_date
         else:
@@ -145,6 +151,13 @@ class Raddo(object):
             except ValueError as e:
                 print(e)
                 sys.exit(1)
+
+        # Set max end date to yesterday:
+        if self.end_datetime.date() == datetime.datetime.today().date():
+            self.end_datetime = \
+                datetime.datetime.today().replace(
+                    hour=0, minute=0, second=0, microsecond=0) \
+                - datetime.timedelta(days=1)
 
         try:
             self.start_datetime = parse(start_date)
@@ -688,8 +701,8 @@ def main():
 
     parser = MyParser(
         description=(
-            ' raddo - utility to download RADOLAN data from DWD servers\n'
-            '         and prepare for simple usage.'),
+            ' raddo - utility to download and preprocess RADOLAN RW\n'
+            '         weather radar data from DWD servers.'),
         prog="raddo",
         # usage='run "%(prog)s -h"  for all cli options.'
         )
@@ -701,8 +714,7 @@ def main():
                         help=(f'Start date as parsable string '
                               f'(e.g. "2018-05-20").'
                               f'\nDefault: {rd.START_DATE} '
-                              f'(current year\'s Jan 1st)'))
-
+                              f'(14 days ago).'))
     parser.add_argument('-e', '--end',
                         required=False,
                         default=rd.END_DATE,
@@ -847,6 +859,9 @@ def main():
 
     # if no -d flag:
     if args.directory == os.getcwd():
+        if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
+            sys.stdout.write(f"{parser.print_help()}\n\n")
+
         if not args.yes:
             if not user_check(f"Do you really want to store RADOLAN data in "
                               f"\"{os.getcwd()}\"?"):
@@ -874,16 +889,19 @@ def main():
                                        yes=args.yes,
                                        buffer=args.buffersize)
     if len(successfull_down) > 0:
+        new_paths = []
+        untarred_dirs = []
         if args.sort:
             new_paths = sort_tars.sort_tars(files=successfull_down)
         if args.extract:
             untarred_dirs = untar.untar(files=new_paths, hist=rd.hist_files)
 
-        if (args.geotiff or args.netcdf) and len(untarred_dirs) > 0:
-            asc_files = rd.get_asc_files(untarred_dirs)
+        if (args.geotiff or args.netcdf):
+            if len(untarred_dirs) > 0:
+                asc_files = rd.get_asc_files(untarred_dirs)
 
-            if args.mask:
-                rd.read_mask(args.mask)
+                if args.mask:
+                    rd.read_mask(args.mask)
 
             # create tiff directory
             if args.geotiff:
@@ -907,7 +925,7 @@ def main():
                 tiff_dir = tmpd.name
                 # create temporary geotiffs
                 gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
-                # create netcdf file
+            # create netcdf file
             if args.netcdf:
                 rd.create_netcdf(gtiff_files,
                                  args.directory,

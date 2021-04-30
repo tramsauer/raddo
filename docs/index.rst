@@ -5,7 +5,7 @@ raddo
 |license badge|
 
 This is the documentation of **raddo**.
-*raddo* is a no-frills software that prepares RADOLAN weather radar
+*raddo*  prepares RADOLAN weather radar
 precipitation data for simple usage.
 
 *raddo* downloads and processes RADOLAN weather radar ASCII data.

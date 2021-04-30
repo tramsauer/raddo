@@ -1,0 +1,9 @@
+paper
+.tox
+.eggs
+*png
+*tiff
+*gif
+.pytest_cache
+tiff
+docs

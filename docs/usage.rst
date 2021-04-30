@@ -21,9 +21,9 @@ text:
       -h, --help            show this help message and exit
       -s START, --start START
                             Start date as parsable string (e.g. "2018-05-20").
-                            Default: 2020-01-01 (current year's Jan 1st)
+                            Default: 14 days ago.
       -e END, --end END     End date as parsable string (e.g. "2020-05-20").
-                            Default: 2020-11-19 (yesterday)
+                            Default: yesterday.
       -d DIRECTORY, --directory DIRECTORY
                             Absolute path to local directory where RADOLAN data
                             should be (and may already be) saved. Checks for
@@ -132,41 +132,42 @@ Python script
 
 Variables and their defaults are:
 
-
 ::
-        Keyword Arguments:
-        -------------------------
-            rad_dir_dwd: string
-                Link to Radolan products on DWD FTP server.
-                defaults to "https://opendata.dwd.de/climate_environment/CDC/\
-                            grids_germany/hourly/radolan/recent/asc/")
 
-            rad_dir_dwd_hist: string
-                Link to Radolan products on DWD FTP server.
-                defaults to "https://opendata.dwd.de/climate_environment/CDC/"\
-                             grids_germany/hourly/radolan/historical/asc/"
+      PARAMETERS:
+      -------------------------
+          rad_dir_dwd: string
+              Link to Radolan products on DWD FTP server.
+              defaults to "https://opendata.dwd.de/climate_environment/CDC/
+                           grids_germany/hourly/radolan/recent/asc/")
 
-            rad_dir: string
-                local directory to be processed / already containing radolan data.
-                defaults to current working directory
+          rad_dir_dwd_hist: string
+              Link to Radolan products on DWD FTP server.
+              defaults to "https://opendata.dwd.de/climate_environment/CDC/"
+                          "grids_germany/hourly/radolan/historical/asc/"
 
-            start_date: string
-                parsable date string (default "2019-01")
+          rad_dir: string
+              local directory to be processed / already containing radolan data.
+              defaults to current working directory
 
-            end_date: string
-                parsable date string (defaults to yesterday)
+          start_date: string
+              parsable date string (default: 14 days ago)
 
-            no_time_correction: bool
-                omit RADOLAN time correction to full hourly values
+          end_date: string
+              parsable date string (default: yesterday)
 
-            errors_allowed: integer
-                number of tries to download one file (default: 5)
-            force:
-                Forces local file search. Omits faster check of
-                .raddo_local_files.txt".
-            force_down:
-                Forces download of all files.
-            mask:
-                Mask shapefile.
-            buffer:
-                Buffer in meter around shapefile mask.
+          errors_allowed: integer
+              number of tries to download one file (default: 5)
+
+          force:
+              Forces local file search. Omits faster check of
+              .raddo_local_files.txt".
+
+          force_down:
+              Forces download of all files.
+
+          mask:
+              Mask shapefile.
+
+          buffer:
+              Buffer in meter around shapefile mask.

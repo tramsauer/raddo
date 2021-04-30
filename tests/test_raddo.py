@@ -3,10 +3,13 @@
 import pytest
 import datetime
 import os
-from raddo.raddo import Raddo
 import tempfile
+
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__),os.pardir,"src"))
 from raddo import sort_tars
 from raddo import untar
+from raddo.raddo import Raddo
 
 __author__ = "Thomas Ramsauer"
 __copyright__ = "Thomas Ramsauer"
@@ -30,7 +33,7 @@ DWD_PROJ = ("+proj=stere +lon_0=10.0 +lat_0=90.0 +lat_ts=60.0 "
 
 
 def _date_str(ds):
-    return datetime.datetime.strftime(END_DATE, "%Y-%m-%d")
+    return datetime.datetime.strftime(ds, "%Y-%m-%d")
 
 
 def test_property_list_of_files():
@@ -104,7 +107,8 @@ def test_raddo_complete_download_old():
         datetime.datetime.today().date() - datetime.timedelta(days=400),
         "%Y-%m-%d")
     END_DATE = _date_str(datetime.datetime.today().date()
-                         - datetime.timedelta(days=399))  # Yesterday
+                         - datetime.timedelta(days=399))
+    print(START_DATE, END_DATE)
     with tempfile.TemporaryDirectory() as tmpdirname:
         os.chdir(tmpdirname)
         RAD_DIR = tmpdirname
