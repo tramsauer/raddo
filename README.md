@@ -1,9 +1,27 @@
 # raddo
 
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
-
+<!-- [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/) -->
+<!-- [![GitHub release](https://img.shields.io/github/release/RaT0M/raddo.svg?logo=github)](https://github.com/RaT0M/raddo/releases/latest)  -->
 
 *raddo* is a no-frills software that prepares RADOLAN weather radar precipitation data for simple usage.
+
+===
+
+- [Installation](#Installation)
+  - [GDAL](#GDAL)
+  - [Direct Install](#DirectInstall)
+- [Usage](#Usage)
+  - [CLI Example](#CLIExample)
+  - [Crontab](#Crontab)
+  - [Python Script](#PythonScript)
+  - [Docker](#Docker)
+  - [Warnings](#Warnings)
+- [Contributing](#Contributing)
+- [License](#License)
+- [Changelog](#Changelog)
+- [Further Development](#FurtherDevelopment)
+- [See also](#Seealso)
 
 *raddo* downloads and processes RADOLAN weather radar ASCII data.
 Downloaded files are sorted in folders based on year and month and may also be decompressed.
@@ -23,7 +41,7 @@ The RADOLAN precipitation data files are *updated daily* by DWD.
 The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/ "https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/recent/asc/").
 
 
-## Installation
+## Installation <a name="Installation"></a>
 
 The software is developed and tested for usage in Linux.
 The preferred way of installing is in a `conda` environment because a working GDAL install is more likely with this option.
@@ -31,7 +49,9 @@ A conda package for raddo will potentially be available in the future through `c
 However, also direct installation is possible. A `pip` package is however not provided for that reasons.
 Testing is done using the conda version of GDAL with `pytest`.
 
-### GDAL
+There is also a docker image available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) if you don't mind the overhead. See the docker section below for instructions.
+
+### GDAL <a name="GDAL"></a>
 
 `GDAL` is a requirement of `raddo`.
 Installation of this dependency can be a problem.
@@ -46,7 +66,7 @@ On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite we
 <!-- conda install -c conda-forge raddo -->
 <!-- ``` -->
 
-### Direct Install
+### Direct Install <a name="DirectInstall"></a>
 
 Better have GDAL python bindings already installed (see above).
 Clone this repository, change into new directory and run:
@@ -64,7 +84,7 @@ pip install -e .
 if you want to work on the code.
 
 
-## Usage
+## Usage <a name="Usage"></a>
 
 Download RADOLAN data from *{current-year}-01-01* till *today* to current directory with `raddo`. For further arguments consult the help text:
 
@@ -112,7 +132,7 @@ optional arguments:
   -v, --version         Print information on software version.
 
 ```
-### Example
+### CLI Example <a name="CLIExample"></a>
 
 Force local available file search, download and processing (sorting, extracting, geotiff & netCDF creation) of `RADOLAN` data for point in shapefile `test_pt.shp` with:
 ``` sh
@@ -124,7 +144,7 @@ More visual:
 ![example image should load here...](raddo.gif "Terminal prompt")
 
 
-### Crontab ###
+### Crontab  <a name="Crontab"></a>
 
 An entry in crontab could be used to download the data. E.g.:
 
@@ -154,7 +174,8 @@ sort_tars.sh && untar_default.sh
 may be added to fully extract and sort the downloaded archives.
 
 
-### Python script
+### Python Script <a name="PythonScript"></a>
+
 
 ``` python
 import raddo as rd
@@ -210,8 +231,8 @@ rd.radolan_down(rad_dir_dwd = ...,  )
 
 Docker lets you run raddo in a containerized form.
 All depenencies are set up - including GDAL.
-With the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
-Alternatively `docker pull raddo` gets you the prebuilt image from docker-hub.
+`docker pull tramsauer/raddo` gets you the prebuilt image from docker-hub.
+Alternatively, with the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
 
 `raddo` then can be used like this:
 
