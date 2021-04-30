@@ -3,22 +3,12 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
-`Unreleased changes <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.4.1...dev>`__
+`Unreleased changes <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.6.0...dev>`__
 
-
-Version `0.5.? <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.1...0.5.?>`__ - 2020-11-??
+Version `0.?.? <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.1...0.5.?>`__ - 2020-11-??
 ----------------------------------------------------------------------------------------------
 Changed
 ^^^^^^^
-
--  fix sorting of flags and rename variables for clarity;
--  add flag to customize output NetCDF file name
-  -  modify default name
-  -  adjust missing dates attribute
--  add missing dates attribute to NetCDF file; code clean up
--  fix path issues if relative path is given (-d)
--  clean exit if dir is not created
--  doc update
 
 Added
 ^^^^^
@@ -26,6 +16,33 @@ Added
 
 Removed
 ^^^^^^^
+
+Version `0.6.0 </compare/0.5.1...0.6.0>`__ - 2021-04-30
+----------------------------------------------------------------------------------------------
+Changed
+^^^^^^^
+
+-  fix sorting of flags and rename variables for clarity;
+-  default start date now 14 days in the past
+-  add flag to customize output NetCDF file name
+  -  modify default name
+  -  adjust missing dates attribute
+-  add missing dates attribute to NetCDF file; code clean up
+-  fix path issues if relative path is given (-d)
+   - fix sorting base path
+-  fix flow of interaction for netcdf creation and geotiff creation
+-  clean exit if dir is not created
+-  doc & README update
+
+
+Added
+^^^^^
+- Dockerfile: raddo now available as docker image: `docker pull tramsauer/raddo`
+- Travis integration
+
+Removed
+^^^^^^^
+- Crontab section from README -> not relevant.
 
 
 Version `0.5.1 <https://gitlab.lrz.de/tramsauer/raddo/-/compare/0.5.0...0.5.1>`__ - 2020-09-25
