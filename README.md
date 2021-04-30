@@ -93,8 +93,8 @@ For further arguments consult the help text:
 usage: raddo [-h] [-u URL] [-d DIRECTORY] [-s START] [-e END] [-r ERRORS] [-f]
              [-x] [-g] [-n] [-m MASK] [-b BUFFER] [-C] [-y] [-F] [-D] [-v]
 
-raddo - utility to download RADOLAN data from DWD servers and prepare for
-simple usage.
+raddo - utility to download and preprocess RADOLAN RW
+        weather radar data from DWD servers.
 
 optional arguments:
   -h, --help            show this help message and exit
