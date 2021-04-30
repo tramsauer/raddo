@@ -1,4 +1,4 @@
-**raddo**: A Python Package for RADOLAN Weather Radar Data Provision
+# **raddo**: A Python Package for RADOLAN Weather Radar Data Provision
 
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 <!-- [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/) -->
