@@ -14,7 +14,7 @@ matrix:
     - env: DISTRIB="conda" PYTHON_VERSION="3.8" COVERAGE="false"
 install:
   - source tests/travis_install.sh
-  - conda install -c conda-forge gdal
+  - conda install -y -c conda-forge gdal
   - pip install -r requirements.txt
   # ^  DEPRECATION WARNING:
   # The automatic creation of a `requirements.txt` file is deprecated.
