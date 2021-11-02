@@ -2,7 +2,7 @@ pytest
 Sphinx
 colorama
 geopandas
-pygdal==3.3.2
+pygdal==3.3.2.10
 GDAL==3.3.2
 numpy
 netCDF4
