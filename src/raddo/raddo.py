@@ -907,8 +907,8 @@ def main():
 
     # if no -d flag:
     if args.directory == os.getcwd():
-        if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
-            sys.stdout.write(f"{parser.print_help()}\n\n")
+        # if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
+            # sys.stdout.write(f"{parser.print_help()}\n\n")
 
         if not args.yes:
             if not user_check(f"Do you really want to store RADOLAN data in "
