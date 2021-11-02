@@ -8,6 +8,7 @@ build:
   apt_packages:
     - gdal-bin
     - libgdal-dev
+    - python3-dev
   tools:
     python: "3.9"
     # You can also specify other tool versions:
