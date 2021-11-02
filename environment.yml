@@ -1,0 +1,17 @@
+name: raddo
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - numpy=1.16
+  - pandas=0.22
+  - setuptools
+  - matplotlib
+  - pytest
+  - gdal=3.2
+  - netCDF4=1.5
+  - geopandas
+  - pip
+  - pip:
+    - python_dateutil

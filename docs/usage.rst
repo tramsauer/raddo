@@ -90,6 +90,24 @@ Warnings
    available.
 
 
+Docker
+~~~~~~~
+
+``raddo`` then can be used from within the docker container like this:
+
+``docker run -ti --rm  -v /tmp/RADOLAN:/data raddo -C -s "20210422"``
+
+- ``-ti``: docker runs in an interactive tty
+- ``--rm``: the container is destroyed after usage
+- ``-v /tmp/RADOLAN:/data``: an existing folder (``/tmp/RADOLAN``) is connected to the container (internal folder `/data`)
+  - If asked accept to save the data in ``/data``
+- ``raddo``: image name, that automatically starts the ``raddo`` program
+- ``-C -s ....``: after the image name, additional arguments for ``raddo`` can be added, here:
+  - ``-C``: complete processing
+  - ``-s "20210422"``: starting date
+
+The data can then be found in the linked folder, e.g. ``/tmp/RADOLAN``.
+
 
 Crontab
 ~~~~~~~

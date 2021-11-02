@@ -8,6 +8,7 @@
 
 """
 
+import ast
 import os
 import sys
 import re
@@ -18,6 +19,7 @@ import tempfile
 from osgeo import gdal
 import numpy as np
 import geopandas as gpd
+import xarray as xr
 import netCDF4
 
 from dateutil.parser import parse
@@ -121,6 +123,9 @@ class Raddo(object):
                 Mask shapefile.
             buffer:
                 Buffer in meter around shapefile mask.
+            coords: string of tuple
+                Coordinates ("(lat,lon)") to extract precipitation for.
+                Exclusive with mask.
 
         """
 
@@ -138,6 +143,9 @@ class Raddo(object):
         self.buffer = kwargs.get('buffer', self.buffer)
         if mask is not None:
             self.read_mask(mask)
+        coords = kwargs.get('coords', None)
+        if coords is not None:
+            self.read_coords(coords)
 
         # Set dates
         if end_date == "today":
@@ -217,7 +225,7 @@ class Raddo(object):
         # Get filenames if directory is specified
         if search:
             print(str(datetime.datetime.now())[:-4],
-                  "   getting names of local files in directory:")
+                  "   Getting names of local files in directory:")
 
             for dir_, _, files in os.walk(rad_dir):
                 print(f"                          ...{dir_[-30:]}          \r",
@@ -438,7 +446,7 @@ class Raddo(object):
 
     def get_asc_files(self, directories):
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   getting available *.asc file names...\n\n')
+                         '   Getting available *.asc file names...\n\n')
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
@@ -466,7 +474,7 @@ class Raddo(object):
                       no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating NetCDF file:\n' + 25*" ")
+                         '   Creating NetCDF file:\n' + 25*" ")
         filelist = sorted(filelist)
 
         if outf is None:
@@ -483,7 +491,8 @@ class Raddo(object):
             fc += 1
         outf = a_outf
         del a_outf
-        sys.stdout.write(f'{outf}\n')
+        sys.stdout.write(f'{pcol.OKBLUE}{outf}{pcol.ENDC}\n')
+        self.netcdf_file_name = outf
 
 
         # Initialize netCDF
@@ -608,7 +617,7 @@ class Raddo(object):
     def create_geotiffs(self, filelist, outdir):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating geotiffs..\n')
+                         '   Creating geotiffs..\n')
 
         res = []
         for i, f in enumerate(filelist):
@@ -619,7 +628,7 @@ class Raddo(object):
             if not os.path.isfile(outf):
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'creating {os.path.basename(f)}')
+                                 f'Creating {os.path.basename(f)}')
                 if self.geotiff_mask is not None:
                     gdal.Warp(outf, f,
                               dstSRS="EPSG:4326",
@@ -641,6 +650,19 @@ class Raddo(object):
                          '   done.\n')
         sys.stdout.flush()
         return res
+
+    def create_point_from_netcdf(self):
+        sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                         '   Creating CSV file:\n' + 25*" ")
+        csv_outf = os.path.splitext(self.netcdf_file_name)[0] + \
+            f"_{self.lon}__{self.lat}".replace(".", "_") + \
+            ".csv"
+        ds = xr.open_dataset(self.netcdf_file_name)
+        da = ds['prc'].sel(lat=self.lat, lon=self.lon, method="nearest")
+        da.name ="precipitation"
+        da.to_series().to_csv(csv_outf)
+        sys.stdout.write(f'{pcol.OKBLUE}{csv_outf}{pcol.ENDC}\n')
+
 
     def read_mask(self, maskfile):
         mf = gpd.read_file(maskfile)
@@ -679,6 +701,21 @@ class Raddo(object):
         self.mask_gdf = mf
         self.mask_type = mf.geom_type
 
+    def read_coords(self, coords):
+        try:
+            sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
+                             '   Reading coordinates:\n' + 25*" ")
+            coord_eval = ast.literal_eval(coords)
+            assert type(coord_eval) == tuple
+            self.lon, self.lat = coord_eval
+            sys.stdout.write(f"{pcol.OKBLUE}"
+                             f"longitude: {self.lon}, latitude: {self.lat}"
+                             f"{pcol.ENDC}\n")
+        except:
+            sys.stderr.write(f"{pcol.WARNING}Point coordinates need to be "
+                             f"specified like so: ")
+            sys.stderr.write("\"-p 12.2,48.5\"  [lon,lat].\n")
+            sys.exit()
 
 def user_check(question):
     sys.stdout.write(question+" ")
@@ -777,6 +814,13 @@ def main():
                         action='store', dest='mask',
                         help=(f'Use mask when creating NetCDF.'))
 
+    parser.add_argument('-p', '--point',
+                        required=False,
+                        default=False,
+                        action='store', dest='point',
+                        help=(f'Extract precipitation for specific '
+                              f'point coordinates.'))
+
     parser.add_argument('-b', '--buffer',
                         required=False,
                         default=1400,
@@ -846,6 +890,10 @@ def main():
         args.extract = True
         args.sort = True
 
+    if (args.geotiff or args.netcdf or args.point):
+        args.extract = True
+        args.sort = True
+
     # print version
     if args.version:
         sys.stdout.write(f"raddo {__version__}\n")
@@ -859,8 +907,8 @@ def main():
 
     # if no -d flag:
     if args.directory == os.getcwd():
-        if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
-            sys.stdout.write(f"{parser.print_help()}\n\n")
+        # if (args.start == rd.START_DATE) & (args.end == rd.END_DATE):
+            # sys.stdout.write(f"{parser.print_help()}\n\n")
 
         if not args.yes:
             if not user_check(f"Do you really want to store RADOLAN data in "
@@ -896,12 +944,20 @@ def main():
         if args.extract:
             untarred_dirs = untar.untar(files=new_paths, hist=rd.hist_files)
 
-        if (args.geotiff or args.netcdf):
+        if (args.geotiff or args.netcdf or args.point):
             if len(untarred_dirs) > 0:
                 asc_files = rd.get_asc_files(untarred_dirs)
 
                 if args.mask:
                     rd.read_mask(args.mask)
+                if args.point:
+                    try:
+                        assert args.mask is False, \
+                            "Only specify mask or point coordinates!"
+                    except AssertionError as e:
+                        sys.stderr.write(f"{e}")
+                        sys.exit()
+                    rd.read_coords(args.point)
 
             # create tiff directory
             if args.geotiff:
@@ -931,6 +987,18 @@ def main():
                                  args.directory,
                                  args.outfile,
                                  args.tcorr)
+            if args.point:
+                if not args.netcdf:
+                    if args.outfile is None:
+                        netcdf_outf = tempfile.NamedTemporaryFile(
+                            prefix="RADOLAN_TEMP_").name
+                    else:
+                        netcdf_outf = args.outfile
+                    rd.create_netcdf(gtiff_files,
+                                     args.directory,
+                                     netcdf_outf,
+                                     args.tcorr)
+                rd.create_point_from_netcdf()
 
         else:
             print("Cannot create GeoTiffs - no newly extracted *.asc files.")

@@ -50,21 +50,6 @@ Contents
    Module Reference <api/modules>
 
 
-Further Development
---------------------
-
-- [X] add historical
-- [X] integrate GeoTiff generation (reprojection)
-- [X] integrate aggregation to NetCDF files
-- [X] add tests!
-- [ ] add docs
-- [ ] add DOI
-- [ ] pip install?
-- [ ] add pypi install
-- [ ] add conda install
-- [X] gif for cli
-
-
 See also
 --------
 

@@ -1,9 +1,10 @@
 # **raddo**: A Python Package for RADOLAN Weather Radar Data Provision
 
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
-[![Build Status: master](https://travis-ci.com/RaT0M/raddo.svg?branch=main)](https://travis-ci.com/RaT0M/raddo)
+[![Build Status: master](https://travis-ci.com/RaT0M/raddo.svg?branch=main)](https://app.travis-ci.com/github/RaT0M/raddo)
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/)
 [![GitHub release](https://img.shields.io/github/release/RaT0M/raddo.svg?logo=github)](https://github.com/RaT0M/raddo/releases/latest)
+[![Documentation Status](https://readthedocs.org/projects/raddo/badge/?version=stable)](https://raddo.readthedocs.io/en/stable/?badge=stable)
 
 *raddo* helps you find, download, sort and preprocess RADOLAN weather radar precipitation data for further usage.
 
@@ -29,7 +30,7 @@ As next step *raddo* creates GeoTiffs in generic WGS84 lat/lon coordinates and/o
 In case the data is only needed for a smaller region, masking via a shapefile is also possible.
 For all possibilities on data retrieval and processing see the *usage section*.
 
-*raddo* tries to download all recent RADOLAN ASCII files / archives from the DWD FTP server to the specified directory if files do not exist already. A list of dates possibly available (default \<current year\>-01-01 until today) is used to compare hypothetical available data sets with actual local available ones. So file listing on the FTP side is skipped due to (formerly) unreliable connection.
+*raddo* tries to download all recent RADOLAN ASCII files / archives from the DWD FTP server to the specified directory if files do not exist already. A list of dates possibly available is used to compare hypothetical available data sets with actual local available ones. So file listing on the FTP side is skipped due to (formerly) unreliable connection.
 
 RADOLAN data from the German Weather Service (Deutscher Wetterdienst, DWD) is copyrighted! Please find the copyright text [here](https://opendata.dwd.de/climate_environment/CDC/Terms_of_use.pdf).
 The freely accessible data may be re-used without any restrictions provided that the source reference is indicated, as laid down in the GeoNutzV ordinance.
@@ -88,57 +89,8 @@ if you want to work on the code.
 
 Download RADOLAN data from 14 days ago till *yesterday* to current directory with `raddo`.
 
-For further arguments consult the help text:
+For further arguments consult the help with `raddo --help`.
 
-``` sh
-usage: raddo [-h] [-s START] [-e END] [-d DIRECTORY] [-C] [-f] [-x] [-g] [-n]
-             [-N OUTFILE] [-m MASK] [-b BUFFERSIZE] [-F] [-D] [-y] [-v]
-             [-u URL] [-r ERRORS] [-t]
-
-raddo - utility to download and preprocess RADOLAN RW
-        weather radar data from DWD servers.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -d DIRECTORY, --directory DIRECTORY
-                        Path to local directory where RADOLAN shouldbe (and
-                        may already be) saved. Checks for existing files only
-                        if this flag is set. Default: current directory.
-  -s START, --start START
-                        Start date as parsable string (e.g. "2018-05-20").
-                        Default: 14 days ago.
-  -e END, --end END     End date as parsable string (e.g. "2020-05-20").
-                        Default: yesterday
-  -C, --complete        Run all subcommands. Same as using flags -fxgn.
-  -f, --sort-in-folders
-                        Should the data be sorted in folders?
-  -x, --extract         Should the data be extracted?
-  -g, --geotiff         Set if GeoTiffs in EPSG:4326 should be created for
-                        newly downloaded files.
-  -n, --netcdf          Create a NetCDF from GeoTiffs?
-  -N OUTFILE, --netcdf-file OUTFILE
-                        Name of the output NetCDF file.
-  -m MASK, --mask MASK  Use mask when creating NetCDF.
-  -b BUFFERSIZE, --buffer BUFFERSIZE
-                        Buffer in meter around mask shapefile (Default 1400m).
-  -F, --force           Forces local file search. Omits faster check of
-                        ".raddo_local_files.txt".
-  -D, --force-download  Forces download of all files.
-  -y, --yes             Skip user input. Just accept to download to current
-                        directory if not specified otherwise.
-  -v, --version         Print information on software version.
-  -u URL, --radolan_server_url URL
-                        Path to recent .asc RADOLAN data on DWD servers.
-                        Default: https://opendata.dwd.de/climate_environment/C
-                        DC/grids_germany/hourly/radolan/recent/asc/
-  -r ERRORS, --errors-allowed ERRORS
-                        Errors allowed when contacting DWD Server. Default: 5
-  -t, --no-time-correction
-                        Omit time adjustment to previous hour in netCDF file
-                        creation and just use RADOLANs sum up time HH:50
-                        (Default: false).
-
-```
 ### CLI Example <a name="CLIExample"></a>
 
 Download data since June 15th 2020 to current directory and sort, extract, create Geotiffs and a NetCDF file:
@@ -151,9 +103,10 @@ Download `RADOLAN` data to *folder1* (`-d`) from *2020-07-15* (`-s`) until yeste
 raddo -d "folder1" -s "2020-07-15" -CD -m "test_pt.shp"
 ```
 
-More visual:
-
-![example image should load here...](raddo.gif "Terminal prompt")
+Download `RADOLAN` data to current folder for the last two weeks at point lat:48.4,lon:12.3, without asking for confirmation:
+``` sh
+raddo -p 12.3,48.4 -y
+```
 
 
 ### Python Script <a name="PythonScript"></a>
@@ -208,7 +161,7 @@ Please find the license agreement in [LICENSE.txt](LICENSE.txt)
 
 ## Changelog <a name="Changelog"></a>
 
-See [Changelog](CHANGELOG.md) document.
+See [Changelog](CHANGELOG.rst) document.
 
 ## Further Development <a name="FurtherDevelopment"></a>
 
