@@ -103,9 +103,10 @@ Download `RADOLAN` data to *folder1* (`-d`) from *2020-07-15* (`-s`) until yeste
 raddo -d "folder1" -s "2020-07-15" -CD -m "test_pt.shp"
 ```
 
-More visual:
-
-![example image should load here...](raddo.gif "Terminal prompt")
+Download `RADOLAN` data to current folder for the last two weeks at point lat:48.4,lon:12.3, without asking for confirmation:
+``` sh
+raddo -p 12.3,48.4 -y
+```
 
 
 ### Python Script <a name="PythonScript"></a>
