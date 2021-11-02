@@ -10,7 +10,7 @@ build:
     - libgdal-dev
     - python3-dev
   tools:
-    python: "miniconda3"
+    python: "miniconda3-4.7"
 
 conda:
   environment: environment.yml
