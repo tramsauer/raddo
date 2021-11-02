@@ -225,7 +225,7 @@ class Raddo(object):
         # Get filenames if directory is specified
         if search:
             print(str(datetime.datetime.now())[:-4],
-                  "   getting names of local files in directory:")
+                  "   Getting names of local files in directory:")
 
             for dir_, _, files in os.walk(rad_dir):
                 print(f"                          ...{dir_[-30:]}          \r",
@@ -446,7 +446,7 @@ class Raddo(object):
 
     def get_asc_files(self, directories):
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   getting available *.asc file names...\n\n')
+                         '   Getting available *.asc file names...\n\n')
         dirs = list(set(list(directories)))
         fl = []
         for d in dirs:
@@ -474,7 +474,7 @@ class Raddo(object):
                       no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating NetCDF file:\n' + 25*" ")
+                         '   Creating NetCDF file:\n' + 25*" ")
         filelist = sorted(filelist)
 
         if outf is None:
@@ -491,7 +491,8 @@ class Raddo(object):
             fc += 1
         outf = a_outf
         del a_outf
-        sys.stdout.write(f'{outf}\n')
+        sys.stdout.write(f'{pcol.OKBLUE}{outf}{pcol.ENDC}\n')
+        self.netcdf_file_name = outf
 
 
         # Initialize netCDF
@@ -616,7 +617,7 @@ class Raddo(object):
     def create_geotiffs(self, filelist, outdir):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   creating geotiffs..\n')
+                         '   Creating geotiffs..\n')
 
         res = []
         for i, f in enumerate(filelist):
@@ -627,7 +628,7 @@ class Raddo(object):
             if not os.path.isfile(outf):
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'creating {os.path.basename(f)}')
+                                 f'Creating {os.path.basename(f)}')
                 if self.geotiff_mask is not None:
                     gdal.Warp(outf, f,
                               dstSRS="EPSG:4326",
