@@ -21,13 +21,13 @@ Installing ``raddo`` is simple: clone the repository, change into new directory 
 
 	  git clone <repo-url>
 	  cd raddo
-	  python setup.py install
+	  pip install .
 
 or
 
 .. code:: bash
 
-    python setup.py develop
+    pip install -e .
 
 if you want to work on the code.
 
