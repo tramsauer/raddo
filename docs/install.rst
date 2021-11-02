@@ -42,5 +42,17 @@ Use docker instead
 
 Docker lets you run raddo in a containerized form.
 All depenencies are set up - including GDAL.
-`docker pull tramsauer/raddo` gets you the prebuilt image from docker-hub.
-Alternatively, with the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
+
+
+.. code:: bash
+
+	  docker pull tramsauer/raddo
+
+gets you the prebuilt image from docker-hub.
+Alternatively, the image can also be directly built with the included `Dockerfile` via
+
+.. code:: bash
+
+	  docker build -t raddo .
+
+from the root directory of the repository.
