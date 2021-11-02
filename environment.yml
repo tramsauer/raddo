@@ -1,3 +1,4 @@
+name: raddo
 channels:
   - conda-forge
   - defaults
