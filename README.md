@@ -1,9 +1,10 @@
 # **raddo**: A Python Package for RADOLAN Weather Radar Data Provision
 
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
-[![Build Status: master](https://travis-ci.com/RaT0M/raddo.svg?branch=main)](https://travis-ci.com/RaT0M/raddo)
+[![Build Status: master](https://travis-ci.com/RaT0M/raddo.svg?branch=main)](https://app.travis-ci.com/github/RaT0M/raddo)
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/)
 [![GitHub release](https://img.shields.io/github/release/RaT0M/raddo.svg?logo=github)](https://github.com/RaT0M/raddo/releases/latest)
+[![Documentation Status](https://readthedocs.org/projects/raddo/badge/?version=stable)](https://raddo.readthedocs.io/en/stable/?badge=stable)
 
 *raddo* helps you find, download, sort and preprocess RADOLAN weather radar precipitation data for further usage.
 
