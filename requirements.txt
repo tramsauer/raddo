@@ -2,6 +2,7 @@ pytest
 Sphinx
 colorama
 geopandas
+pygdal
 GDAL
 numpy
 netCDF4
