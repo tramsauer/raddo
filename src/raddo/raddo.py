@@ -630,6 +630,8 @@ class Raddo(object):
                                  f'   [{i+1} / {len(filelist)}]  '
                                  f'Creating {os.path.basename(f)}')
                 if self.geotiff_mask is not None:
+                    outf_suffix = "_mask"
+                    outf = os.path.splitext(outf)[0] + outf_suffix + ".tiff"
                     gdal.Warp(outf, f,
                               dstSRS="EPSG:4326",
                               srcSRS=self.DWD_PROJ,

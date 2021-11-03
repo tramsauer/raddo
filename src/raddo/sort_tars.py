@@ -54,7 +54,7 @@ def sort_tars(**kwargs):
             try:
                 # TODO: replace os.system
                 os.system('mkdir -vp {}'.format(future_file_path))
-                os.system('mv -v {} {}'.format(file, future_file_path))
+                os.system('mv -v {} {} 2>/dev/null'.format(file, future_file_path))
                 new_paths.append(os.path.join(future_file_path, file))
             except Exception:
                 sys.stderr.write('ERROR.\n')
