@@ -470,6 +470,15 @@ class Raddo(object):
         return f, datetime.datetime(year, mon, day,
                                     hour, minu, 0)
 
+    def _check_netcdf_outf(self, outf):
+        if outf is None:
+            outf = (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
+                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
+        else:
+            if not os.path.splitext(outf)[1] == ".nc":
+                outf = os.path.splitext(outf)[0] + ".nc"
+        return outf
+
     def create_netcdf(self, filelist, outdir, outf=None,
                       no_time_correction=False):
         assert type(filelist) == list
@@ -477,9 +486,7 @@ class Raddo(object):
                          '   Creating NetCDF file:\n' + 25*" ")
         filelist = sorted(filelist)
 
-        if outf is None:
-            outf = (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
-                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
+        outf = self._check_netcdf_outf(outf)
         outf = os.path.join(outdir, outf)
         fc = 1
         a_outf = outf
