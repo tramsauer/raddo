@@ -21,7 +21,6 @@
 - [Contributing](#Contributing)
 - [License](#License)
 - [Changelog](#Changelog)
-- [Further Development](#FurtherDevelopment)
 - [See also](#Seealso)
 
 *raddo* downloads and processes RADOLAN weather radar ASCII data.
@@ -146,9 +145,8 @@ The data can then be found in the linked folder, e.g. `/tmp/RADOLAN`.
 ### Warnings <a name="Warnings"></a>
 
 - currently, if a shapefile mask is used, sub-optimal *nearest neighbour resampling* is applied in the GeoTiff conversion (as other methods were not functional in gdal python bindings..(?)).
-- if GeoTiffs are not wanted, they need to be created anyways, and processing might fill up your *tempfs* in `/tmp`..
+- if GeoTiffs are not wanted, they need to be created for further outputs (NetCDF, CSV) anyways, and processing might fill up your *tempfs* in `/tmp`..
 - if multiple polygons are used as mask, they are dissolved & buffered.
-- `raddo` does not recreate nor warn if GeoTiffs are already available.
 
 ## Contributing <a name="Contributing"></a>
 
@@ -162,11 +160,6 @@ Please find the license agreement in [LICENSE.txt](LICENSE.txt)
 ## Changelog <a name="Changelog"></a>
 
 See [Changelog](CHANGELOG.rst) document.
-
-## Further Development <a name="FurtherDevelopment"></a>
-
-- [ ] add DOI
-- [ ] add conda install
 
 ## See also <a name="Seealso"></a>
 
