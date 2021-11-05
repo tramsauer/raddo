@@ -29,13 +29,10 @@ The data can be found at [opendata.dwd.de](https://opendata.dwd.de/climate_envir
 
 ## Installation <a name="Installation"></a>
 
-The software is developed and tested for usage in Linux.
-The preferred way of installing is in a `conda` environment because a working GDAL install is more likely with this option.
-A conda package for raddo will potentially be available in the future through `conda forge`.
-However, also direct installation is possible. A `pip` package is however not provided for that reason.
-Testing is done using the conda version of GDAL with `pytest`.
+`raddo` can be used after installing from source or by using the provided **docker image** that avoids GDAL complications and is available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) and [GitHub Container Registry](https://github.com/RaT0M/raddo/pkgs/container/raddo) if you don't mind the overhead.
 
-There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) and [GitHub Container Registry](https://github.com/RaT0M/raddo/pkgs/container/raddo) if you don't mind the overhead.
+The software is developed and tested for usage in Linux.
+Testing is done using the conda version of GDAL with `pytest`.
 
 
 <!-- ### `conda` Install -->
@@ -83,9 +80,7 @@ Installation of this dependency can be cumbersome.
 If errors arise, `GDAL` binaries might be missing.
 When using *conda*, `conda install -c conda-forge gdal` should work.
 On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
-Using the dockerized version of raddo eliminates these difficulties.
-
-
+Using the **containerized** version of raddo eliminates these difficulties.
 
 ## Usage <a name="Usage"></a>
 
