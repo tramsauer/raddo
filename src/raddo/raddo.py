@@ -470,44 +470,105 @@ class Raddo(object):
         return f, datetime.datetime(year, mon, day,
                                     hour, minu, 0)
 
+    def _check_netcdf_outf(self, outf):
+        if outf is None:
+            return (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
+                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
+        else:
+            if not os.path.splitext(outf)[1] == ".nc":
+                return os.path.splitext(outf)[0] + ".nc"
+            else:
+                return outf
+
+    def _check_netcdf_exist(self, outdir):
+        """
+        Returns True if file exists and should be used, False otherwise
+        """
+        fl = os.listdir(outdir)
+        ncf = [f for f in fl if "nc" in os.path.splitext(f)[1]]
+        if len(ncf) > 0:
+            sys.stdout.write(25*" " + f"{pcol.WARNING}" + \
+                             "Already existing NetCDF files:\n" + \
+                             f"{pcol.ENDC}")
+            [sys.stdout.write(25*" " + f"  - {f}\n") for f in sorted(ncf)]
+            for f in ncf:
+                if self.__check_netcdf_size(f):
+                    return f
+        return False
+
+    def __check_netcdf_size(self, f):
+        """
+        Returns filename of existing netcdf file if same minimum or maximum lat/lon.
+        """
+        ds = xr.open_dataset(f)
+        try:
+            assert \
+                all([(str(np.round(np.min(self.lon), 3)) \
+                     != str(np.round(np.min(ds.lon.values), 3))),
+                    (str(np.round(np.max(self.lon), 3)) \
+                     != str(np.round(np.max(ds.lon.values), 3))),
+                    (str(np.round(np.min(self.lat), 3)) \
+                     != str(np.round(np.min(ds.lat.values), 3))),
+                    (str(np.round(np.max(self.lat), 3)) \
+                     != str(np.round(np.max(ds.lat.values),3)))]), \
+                f"{f} already has same coordinate range.\n"
+        except AssertionError as e:
+            sys.stdout.write(25*" " + f"{pcol.WARNING}{e}{pcol.ENDC}")
+            if self.yes:
+                sys.stdout.write(25*" " + f"Skipping NetCDF creation.\n")
+                return f
+            else:
+                if user_check(25*" " + f"Skip creating another NetCDF file?"):
+                    return f
+        except Exception as e:
+            sys.stdout.write(25*" " + f"Cannot compare existing file {f}:\n")
+            sys.stdout.write(25*" " + f"{e}\n")
+            return False
+
     def create_netcdf(self, filelist, outdir, outf=None,
                       no_time_correction=False):
         assert type(filelist) == list
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
-                         '   Creating NetCDF file:\n' + 25*" ")
+                         '   Starting to create NetCDF file:\n')
         filelist = sorted(filelist)
 
-        if outf is None:
-            outf = (f"RADOLAN_{self.start_datetime.strftime('%Y%m%d')}"
-                    f"_{self.end_datetime.strftime('%Y%m%d')}.nc")
-        outf = os.path.join(outdir, outf)
+
+        # Get lat lon for netCDF creation
+        ds = gdal.Open(filelist[0])
+        a = ds.ReadAsArray()
+        b = ds.GetGeoTransform()
+        self.nlat, self.nlon = np.shape(a)
+        self.lon = np.arange(self.nlon) * b[1] + b[0]
+        self.lat = np.arange(self.nlat) * b[5] + b[3]
+
+        # Create netCDF name
+        self.outf = self._check_netcdf_outf(outf)
+        self.outf = os.path.join(outdir, self.outf)
         fc = 1
-        a_outf = outf
+        a_outf = self.outf
         while True:
             if not os.path.isfile(a_outf):
                 break
             else:
-                a_outf = outf[:-3] + f"_{fc}" + outf[-3:]
+                a_outf = self.outf[:-3] + f"_{fc}" + self.outf[-3:]
             fc += 1
-        outf = a_outf
+        self.outf = a_outf
         del a_outf
-        sys.stdout.write(f'{pcol.OKBLUE}{outf}{pcol.ENDC}\n')
-        self.netcdf_file_name = outf
+        sys.stdout.write(25*" " + f'{pcol.OKBLUE}{self.outf}{pcol.ENDC}\n')
+        self.netcdf_file_name = str(self.outf)
 
+        # Check for existing netCDF files
+        old_outf = self._check_netcdf_exist(outdir)
+        if old_outf:
+            self.netcdf_file_name = old_outf
+            return old_outf
 
         # Initialize netCDF
-        ds = gdal.Open(filelist[0])
-        a = ds.ReadAsArray()
-        b = ds.GetGeoTransform()
-        nlat, nlon = np.shape(a)
-        lon = np.arange(nlon) * b[1] + b[0]
-        lat = np.arange(nlat) * b[5] + b[3]
-
-        nco = netCDF4.Dataset(outf, 'w', clobber=True)
+        nco = netCDF4.Dataset(self.netcdf_file_name, 'w', clobber=True)
 
         # create dimensions, variables and attributes:
-        nco.createDimension('lon', nlon)
-        nco.createDimension('lat', nlat)
+        nco.createDimension('lon', self.nlon)
+        nco.createDimension('lat', self.nlat)
         nco.createDimension('time', None)
 
         lono = nco.createVariable('lon', 'f4', ('lon'))
@@ -552,8 +613,8 @@ class Raddo(object):
         nco.Conventions = 'CF-1.6'
 
         # write lon,lat
-        lono[:] = lon
-        lato[:] = lat
+        lono[:] = self.lon
+        lato[:] = self.lat
 
         itime = 0
 
@@ -628,8 +689,10 @@ class Raddo(object):
             if not os.path.isfile(outf):
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'Creating {os.path.basename(f)}')
+                                 f'Creating {os.path.basename(outf)}')
                 if self.geotiff_mask is not None:
+                    outf_suffix = "_mask"
+                    outf = os.path.splitext(outf)[0] + outf_suffix + ".tiff"
                     gdal.Warp(outf, f,
                               dstSRS="EPSG:4326",
                               srcSRS=self.DWD_PROJ,
@@ -644,7 +707,7 @@ class Raddo(object):
             else:
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'{os.path.basename(f)} already exists.')
+                                 f'{os.path.basename(outf)} already exists.')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
@@ -654,11 +717,11 @@ class Raddo(object):
     def create_point_from_netcdf(self):
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   Creating CSV file:\n' + 25*" ")
-        csv_outf = os.path.splitext(self.netcdf_file_name)[0] + \
-            f"_{self.lon}__{self.lat}".replace(".", "_") + \
+        csv_outf = os.path.splitext(self.outf)[0] + \
+            f"_{self.plon}__{self.plat}".replace(".", "_") + \
             ".csv"
         ds = xr.open_dataset(self.netcdf_file_name)
-        da = ds['prc'].sel(lat=self.lat, lon=self.lon, method="nearest")
+        da = ds['prc'].sel(lat=self.plat, lon=self.plon, method="nearest")
         da.name ="precipitation"
         da.to_series().to_csv(csv_outf)
         sys.stdout.write(f'{pcol.OKBLUE}{csv_outf}{pcol.ENDC}\n')
@@ -707,9 +770,9 @@ class Raddo(object):
                              '   Reading coordinates:\n' + 25*" ")
             coord_eval = ast.literal_eval(coords)
             assert type(coord_eval) == tuple
-            self.lon, self.lat = coord_eval
+            self.plon, self.plat = coord_eval
             sys.stdout.write(f"{pcol.OKBLUE}"
-                             f"longitude: {self.lon}, latitude: {self.lat}"
+                             f"longitude: {self.plon}, latitude: {self.plat}"
                              f"{pcol.ENDC}\n")
         except:
             sys.stderr.write(f"{pcol.WARNING}Point coordinates need to be "

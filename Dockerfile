@@ -13,3 +13,5 @@ ENTRYPOINT ["raddo"]
 CMD [ "--help" ]
 
 WORKDIR /data
+
+LABEL org.opencontainers.image.source=https://github.com/RaT0M/raddo
