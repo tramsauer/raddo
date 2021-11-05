@@ -9,21 +9,6 @@
 
 *raddo* helps you find, download, sort and preprocess RADOLAN weather radar precipitation data for further usage.
 
-
-- [Installation](#Installation)
-  - [GDAL](#GDAL)
-  - [Direct Install](#DirectInstall)
-- [Usage](#Usage)
-  - [CLI Example](#CLIExample)
-  - [Crontab](#Crontab)
-  - [Python Script](#PythonScript)
-  - [Docker](#Docker)
-  - [Warnings](#Warnings)
-- [Contributing](#Contributing)
-- [License](#License)
-- [Changelog](#Changelog)
-- [See also](#Seealso)
-
 *raddo* downloads and processes RADOLAN weather radar ASCII data.
 Downloaded files are sorted in folders based on year and month and may also be decompressed.
 As next step *raddo* creates GeoTiffs in generic WGS84 lat/lon coordinates and/or a single NetCDF file upon user request.
@@ -50,15 +35,8 @@ A conda package for raddo will potentially be available in the future through `c
 However, also direct installation is possible. A `pip` package is however not provided for that reason.
 Testing is done using the conda version of GDAL with `pytest`.
 
-There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) and [GitHub Container Registry](https://github.com/RaT0M/raddo/pkgs/container/raddo) if you don't mind the overhead. See the [Docker](#Docker) section below for instructions.
+There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) and [GitHub Container Registry](https://github.com/RaT0M/raddo/pkgs/container/raddo) if you don't mind the overhead.
 
-### GDAL <a name="GDAL"></a>
-
-`GDAL` is a requirement of `raddo`.
-Installation of this dependency can be a problem.
-If errors arise, `GDAL` binaries might be missing.
-When using *conda*, `conda install -c conda-forge gdal` should work.
-On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
 
 <!-- ### `conda` Install -->
 
@@ -67,7 +45,7 @@ On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite we
 <!-- conda install -c conda-forge raddo -->
 <!-- ``` -->
 
-### Direct Install <a name="DirectInstall"></a>
+### From Source <a name="DirectInstall"></a>
 
 Better have GDAL python bindings already installed (see above).
 Clone this repository, change into new directory and run:
@@ -84,6 +62,30 @@ pip install -e .
 ```
 if you want to work on the code.
 
+### Docker Image <a name="DockerImage"></a>
+
+You can run raddo in a containerized form where all depenencies are set up - including GDAL.
+To install:
+
+```sh
+docker pull tramsauer/raddo
+#or
+docker pull ghcr.io/rat0m/raddo
+```` 
+Alternatively, with the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
+
+`raddo` then can be used like this:
+
+### Dependencies <a name="Dependencies"></a>
+
+`GDAL` is a requirement of `raddo`.
+Installation of this dependency can be cumbersome.
+If errors arise, `GDAL` binaries might be missing.
+When using *conda*, `conda install -c conda-forge gdal` should work.
+On Ubuntu (and derivates) using the `UbuntuGIS-ppa` seems to be working quite well.
+Using the dockerized version of raddo eliminates these difficulties.
+
+
 
 ## Usage <a name="Usage"></a>
 
@@ -91,45 +93,30 @@ Download RADOLAN data from 14 days ago till *yesterday* to current directory wit
 
 For further arguments consult the help with `raddo --help`.
 
-### CLI Example <a name="CLIExample"></a>
+### Examples <a name="CLIExample"></a>
 
-Download data since June 15th 2020 to current directory and sort, extract, create Geotiffs and a NetCDF file:
-``` sh
-raddo -s "2020-07-15" -C
-```
+- Download data since June 15th 2020 to current directory and sort, extract, create Geotiffs and a NetCDF file:
+  ``` sh
+  raddo -s "2020-07-15" -C
+  ```
 
-Download `RADOLAN` data to *folder1* (`-d`) from *2020-07-15* (`-s`) until yesterday (default) for point in shapefile `test_pt.shp` (`-m`). Sort and extract nested archives and create GeoTiffs and a single NetCDF file from there (`-C`). Don't check for available files but just download all needed files (`-D`):
-``` sh
-raddo -d "folder1" -s "2020-07-15" -CD -m "test_pt.shp"
-```
+- Download `RADOLAN` data to *folder1* (`-d`) from *2020-07-15* (`-s`) until yesterday (default) for point in shapefile `test_pt.shp` (`-m`). Sort and extract nested archives and create GeoTiffs and a single NetCDF file from there (`-C`). Don't check for available files but just download all needed files (`-D`):
+  ``` sh
+  raddo -d "folder1" -s "2020-07-15" -CD -m "test_pt.shp"
+  ```
 
-Download `RADOLAN` data to current folder for the last two weeks at point lat:48.4,lon:12.3, without asking for confirmation:
-``` sh
-raddo -p 12.3,48.4 -y
-```
+- Download `RADOLAN` data to current folder for the last two weeks at point lat:48.4,lon:12.3, without asking for confirmation:
 
-
-### Python Script <a name="PythonScript"></a>
-
-
-``` python
-import raddo as rd
-
-rd.radolan_down(rad_dir_dwd = ...,  )
-```
+  ``` sh
+  raddo -p 12.3,48.4 -y
+  ```
 
 
 ### Docker <a name="Docker"></a>
 
-
-Docker lets you run raddo in a containerized form.
-All depenencies are set up - including GDAL.
-`docker pull tramsauer/raddo` gets you the prebuilt image from docker-hub.
-Alternatively, with the included `Dockerfile` the image can also be directly built with `docker build -t raddo .` from the root directory of the repository.
-
-`raddo` then can be used like this:
-
-`docker run -ti --rm  -v /tmp/RADOLAN:/data raddo -C -s "20210422"`
+``` sh 
+docker run -ti --rm  -v /tmp/RADOLAN:/data raddo -C -s "20210422"
+```
 
 - `-ti`: docker runs in an interactive tty
 - `--rm`: the container is destroyed after usage
@@ -141,6 +128,16 @@ Alternatively, with the included `Dockerfile` the image can also be directly bui
   - `-s "20210422"`: starting date
 
 The data can then be found in the linked folder, e.g. `/tmp/RADOLAN`.
+
+
+### Python Script <a name="PythonScript"></a>
+
+
+``` python
+import raddo as rd
+
+rd.radolan_down(rad_dir_dwd = ...,  )
+```
 
 
 ### Warnings <a name="Warnings"></a>
