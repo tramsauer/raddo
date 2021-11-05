@@ -279,3 +279,40 @@ def test_raddo_complete_download_with_mask_poly_multi():
         # asc_files = rd.get_asc_files(untarred_dirs)
         # gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
         # rd.create_netcdf(gtiff_files, RAD_DIR)
+
+def test_raddo_complete_download_with_point():
+    START_DATE = datetime.datetime.strftime(
+        datetime.datetime.today().date() - datetime.timedelta(days=4),
+        "%Y-%m-%d")
+    END_DATE = _date_str(datetime.datetime.today().date()
+                         - datetime.timedelta(days=2))  # Yesterday
+
+    tempfile.TemporaryDirectory().cleanup()
+    with tempfile.TemporaryDirectory(suffix="point") as tmpdirname:
+        print(tmpdirname)
+        os.chdir(tmpdirname)
+        rd = Raddo()
+        RAD_DIR = tmpdirname
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+
+        successfull_down = rd.radolan_down(rad_dir_dwd=RAD_DIR_DWD,
+                                                rad_dir_dwd_hist=RAD_DIR_DWD_HIST,
+                                                rad_dir=RAD_DIR,
+                                                errors_allowed=ERRORS_ALLOWED,
+                                                start_date=START_DATE,
+                                                end_date=END_DATE,
+                                                force=True,
+                                                force_down=True)
+
+
+        new_paths = sort_tars.sort_tars(files=successfull_down)
+        untarred_dirs = untar.untar(files=new_paths)
+        tiff_dir = rd.try_create_directory(os.path.join(RAD_DIR,
+                                                        "tiff"))
+        asc_files = rd.get_asc_files(untarred_dirs)
+        gtiff_files = rd.create_geotiffs(asc_files, tiff_dir)
+        rd.create_netcdf(gtiff_files, RAD_DIR)
+        print("NetCDF file name (rd.netcdf_file_name):" + rd.netcdf_file_name)
+        rd.read_coords("12,48")
+        rd.create_point_from_netcdf()
