@@ -5,6 +5,7 @@
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/)
 [![GitHub release](https://img.shields.io/github/release/RaT0M/raddo.svg?logo=github)](https://github.com/RaT0M/raddo/releases/latest)
 [![Documentation Status](https://readthedocs.org/projects/raddo/badge/?version=stable)](https://raddo.readthedocs.io/en/stable/?badge=stable)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5642650.svg)](https://doi.org/10.5281/zenodo.5642650)
 
 *raddo* helps you find, download, sort and preprocess RADOLAN weather radar precipitation data for further usage.
 
@@ -21,7 +22,6 @@
 - [Contributing](#Contributing)
 - [License](#License)
 - [Changelog](#Changelog)
-- [Further Development](#FurtherDevelopment)
 - [See also](#Seealso)
 
 *raddo* downloads and processes RADOLAN weather radar ASCII data.
@@ -50,7 +50,7 @@ A conda package for raddo will potentially be available in the future through `c
 However, also direct installation is possible. A `pip` package is however not provided for that reason.
 Testing is done using the conda version of GDAL with `pytest`.
 
-There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) if you don't mind the overhead. See the [Docker](#Docker) section below for instructions.
+There is also a **docker image** available at the [docker hub](https://hub.docker.com/r/tramsauer/raddo/) and [GitHub Container Registry](https://github.com/RaT0M/raddo/pkgs/container/raddo) if you don't mind the overhead. See the [Docker](#Docker) section below for instructions.
 
 ### GDAL <a name="GDAL"></a>
 
@@ -162,11 +162,6 @@ Please find the license agreement in [LICENSE.txt](LICENSE.txt)
 ## Changelog <a name="Changelog"></a>
 
 See [Changelog](CHANGELOG.rst) document.
-
-## Further Development <a name="FurtherDevelopment"></a>
-
-- [ ] add DOI
-- [ ] add conda install
 
 ## See also <a name="Seealso"></a>
 
