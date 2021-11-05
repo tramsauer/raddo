@@ -635,7 +635,7 @@ class Raddo(object):
             if not os.path.isfile(outf):
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'Creating {os.path.basename(f)}')
+                                 f'Creating {os.path.basename(outf)}')
                 if self.geotiff_mask is not None:
                     outf_suffix = "_mask"
                     outf = os.path.splitext(outf)[0] + outf_suffix + ".tiff"
@@ -653,7 +653,7 @@ class Raddo(object):
             else:
                 sys.stdout.write('\r' + str(datetime.datetime.now())[:-4] +
                                  f'   [{i+1} / {len(filelist)}]  '
-                                 f'{os.path.basename(f)} already exists.')
+                                 f'{os.path.basename(outf)} already exists.')
             res.append(outf)
         sys.stdout.write('\n' + str(datetime.datetime.now())[:-4] +
                          '   done.\n')
