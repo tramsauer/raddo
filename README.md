@@ -1,4 +1,4 @@
-# **raddo**: A Python Package for RADOLAN Weather Radar Data Provision
+# **raddo**: Simply retrieve German Weather Radar Data
 
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 [![Build Status: master](https://travis-ci.com/RaT0M/raddo.svg?branch=main)](https://app.travis-ci.com/github/RaT0M/raddo)
@@ -7,7 +7,7 @@
 [![Documentation Status](https://readthedocs.org/projects/raddo/badge/?version=stable)](https://raddo.readthedocs.io/en/stable/?badge=stable)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5642650.svg)](https://doi.org/10.5281/zenodo.5642650)
 
-*raddo* helps you find, download, sort and preprocess RADOLAN weather radar precipitation data for further usage.
+*raddo* helps you find, download, sort and preprocess RADOLAN RW weather radar precipitation data for further usage.
 
 *raddo* downloads and processes RADOLAN weather radar ASCII data.
 Downloaded files are sorted in folders based on year and month and may also be decompressed.
