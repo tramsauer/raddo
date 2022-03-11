@@ -89,7 +89,7 @@ if you want to work on the code.
 
 Download RADOLAN data from 14 days ago till *yesterday* to current directory with `raddo`.
 
-For further arguments consult the help with `raddo --help`.
+For further arguments consult the help with `raddo --help` and consult the [wiki](https://github.com/tramsauer/raddo/wiki/Further-Usage-Information).
 
 ### CLI Example <a name="CLIExample"></a>
 
