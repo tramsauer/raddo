@@ -1,5 +1,7 @@
 # [**raddo**:  RADOLAN Weather Radar Data Downloader](https://github.com/tramsauer/raddo)
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5642650.svg)](https://doi.org/10.5281/zenodo.5642650)
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 [![Build Status: master](https://travis-ci.com/tramsauer/raddo.svg?branch=main)](https://app.travis-ci.com/github/tramsauer/raddo)
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/tramsauer/raddo?logo=docker)](https://hub.docker.com/r/tramsauer/raddo/)
@@ -154,10 +156,13 @@ The data can then be found in the linked folder, e.g. `/tmp/RADOLAN`.
 
 See [CONTRIBUTING](CONTRIBUTING.md) document.
 
-## License <a name="License"></a>
+## License and Citation <a name="License"></a>
 [![license badge](https://img.shields.io/badge/license-GNU_GPLv3-blue)](LICENSE.txt)
 
 Please find the license agreement in [LICENSE.txt](LICENSE.txt)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5642650.svg)](https://doi.org/10.5281/zenodo.5642650)
+
 
 ## Changelog <a name="Changelog"></a>
 
@@ -165,7 +170,6 @@ See [Changelog](CHANGELOG.rst) document.
 
 ## Further Development <a name="FurtherDevelopment"></a>
 
-- [ ] add DOI
 - [ ] add conda install
 
 ## See also <a name="Seealso"></a>
